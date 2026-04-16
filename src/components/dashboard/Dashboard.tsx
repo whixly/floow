@@ -10,6 +10,7 @@ import { supabase } from '../../lib/supabase'
 import { useStore, POM_DURATIONS } from '../../store/useStore'
 import type { Task, CalendarEvent, Habit, Goal, Note, HabitLog } from '../../types'
 import { ACCENT_COLORS } from '../../types'
+import { fireAchievement } from '../../lib/achievement'
 
 // ── Pie chart helpers ─────────────────────────────────────────
 function polar(cx: number, cy: number, r: number, deg: number) {
@@ -137,10 +138,8 @@ export default function Dashboard() {
       if (t <= 0) {
         if (pomMode === 'work') {
           setPomSessions(s => s + 1)
-          supabase.from('pomodoro_sessions').insert({
-            user_id: user?.id,
-            session_type: 'work',
-          })
+          supabase.from('pomodoro_sessions').insert({ user_id: user?.id, session_type: 'work' })
+          fireAchievement('pomodoro')
         }
         completePomCycle()
       }

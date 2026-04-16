@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import TopNav from './TopNav'
+import AchievementToast from '../ui/AchievementToast'
 
 export default function AppLayout() {
   return (
@@ -10,6 +11,7 @@ export default function AppLayout() {
           <Outlet />
         </div>
       </main>
+      <AchievementToast />
     </div>
   )
 }

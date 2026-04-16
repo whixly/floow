@@ -3,6 +3,7 @@ import { Plus, Search, Trash2, CheckCircle, Circle, Clock, Tag } from 'lucide-re
 import { supabase } from '../../lib/supabase'
 import { useStore } from '../../store/useStore'
 import { format } from 'date-fns'
+import { fireAchievement } from '../../lib/achievement'
 import type { Task } from '../../types'
 
 const priorities = ['low', 'medium', 'high', 'urgent'] as const
@@ -59,6 +60,7 @@ export default function TasksPage() {
     const next = task.status === 'done' ? 'todo' : task.status === 'todo' ? 'in_progress' : 'done'
     await supabase.from('tasks').update({ status: next }).eq('id', task.id)
     setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: next } : t))
+    if (next === 'done') fireAchievement('task')
   }
 
   const deleteTask = async (id: string) => {

@@ -3,6 +3,7 @@ import { Plus, Trash2, Flame, CheckCircle, Circle } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useStore } from '../../store/useStore'
 import { format, subDays } from 'date-fns'
+import { fireAchievement } from '../../lib/achievement'
 import type { Habit, HabitLog } from '../../types'
 import { ACCENT_COLORS } from '../../types'
 
@@ -57,6 +58,7 @@ export default function HabitsPage() {
     } else {
       const { data } = await supabase.from('habit_logs').insert({ habit_id: habit.id, user_id: user!.id, completed_date: today }).select().single()
       if (data) setLogs(prev => [...prev, data])
+      fireAchievement('habit')
       const newStreak = habit.streak + 1
       await supabase.from('habits').update({ streak: newStreak }).eq('id', habit.id)
       setHabits(prev => prev.map(h => h.id === habit.id ? { ...h, streak: newStreak } : h))

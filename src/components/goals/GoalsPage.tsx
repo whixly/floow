@@ -3,6 +3,7 @@ import { Plus, Trash2, Target, CheckSquare, Square, ChevronDown, ChevronUp } fro
 import { supabase } from '../../lib/supabase'
 import { useStore } from '../../store/useStore'
 import { format } from 'date-fns'
+import { fireAchievement } from '../../lib/achievement'
 import type { Goal, Milestone } from '../../types'
 import { ACCENT_COLORS } from '../../types'
 
@@ -58,6 +59,7 @@ export default function GoalsPage() {
     const status = clamped === 100 ? 'completed' : 'active'
     await supabase.from('goals').update({ progress: clamped, status }).eq('id', goal.id)
     setGoals(prev => prev.map(g => g.id === goal.id ? { ...g, progress: clamped, status } : g))
+    if (clamped === 100) fireAchievement('goal')
   }
 
   const updateStatus = async (goal: Goal, status: Goal['status']) => {
