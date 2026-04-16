@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { Moon, Sun, Check, User, Palette } from 'lucide-react'
+import { Check, User, Palette } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { supabase } from '../../lib/supabase'
 import { ACCENT_COLORS } from '../../types'
 
 export default function SettingsPage() {
-  const { user, accentColor, theme, setAccentColor, setTheme } = useStore()
+  const { user, accentColor, setAccentColor } = useStore()
   const [fullName, setFullName] = useState(user?.user_metadata?.full_name ?? '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -16,7 +16,7 @@ export default function SettingsPage() {
     setSaving(true)
     await supabase.auth.updateUser({ data: { full_name: fullName } })
     if (user) {
-      await supabase.from('profiles').upsert({ id: user.id, full_name: fullName, accent_color: accentColor, theme })
+      await supabase.from('profiles').upsert({ id: user.id, full_name: fullName, accent_color: accentColor })
     }
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
@@ -25,11 +25,6 @@ export default function SettingsPage() {
   const handleAccentChange = async (colorName: string) => {
     setAccentColor(colorName)
     if (user) await supabase.from('profiles').upsert({ id: user.id, accent_color: colorName })
-  }
-
-  const handleThemeChange = async (newTheme: 'light' | 'dark') => {
-    setTheme(newTheme)
-    if (user) await supabase.from('profiles').upsert({ id: user.id, theme: newTheme })
   }
 
   const inputCls = 'w-full px-4 py-2.5 rounded-lg border text-sm focus:outline-none transition t-input'
@@ -74,27 +69,6 @@ export default function SettingsPage() {
             <Palette size={16} className="text-white" />
           </div>
           <h2 className="font-semibold t-ct">Appearance</h2>
-        </div>
-
-        {/* Theme Toggle */}
-        <div className="mb-6">
-          <p className="text-sm font-medium t-ct mb-1">Mode</p>
-          <p className="text-xs t-ct-3 mb-3">
-            Light = white text on vivid color · Dark = light gray text on deep color
-          </p>
-          <div className="flex gap-3">
-            {(['light', 'dark'] as const).map(t => (
-              <button key={t} onClick={() => handleThemeChange(t)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-medium transition ${
-                  theme === t ? 'bg-white/90 border-white/50' : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
-                }`}
-                style={theme === t ? { color: 'var(--theme-bg)' } : {}}>
-                {t === 'light' ? <Sun size={16} /> : <Moon size={16} />}
-                {t === 'light' ? 'Light' : 'Dark'}
-                {theme === t && <Check size={14} className="ml-1" />}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Color Picker */}

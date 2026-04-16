@@ -52,7 +52,7 @@ export const useStore = create<AppStore>()(
     (set, get) => ({
       user: null,
       accentColor: 'Blue',
-      theme: 'light',
+      theme: 'dark',
       setUser: (user) => set({ user }),
       setAccentColor: (color) => {
         set({ accentColor: color })
