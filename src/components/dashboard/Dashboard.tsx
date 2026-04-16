@@ -30,18 +30,30 @@ type PomMode = 'work' | 'short_break'
 // ── Colors for goals ──────────────────────────────────────────
 const PIE_FALLBACK = ['#86efac','#6ee7b7','#67e8f9','#a5b4fc','#fca5a5','#fcd34d','#c4b5fd','#fb923c']
 
+// ── Rank badge colors ─────────────────────────────────────────
+const RANK_COLORS = ['#FFD700', '#C0C0C0', '#CD7F32']
+
+interface LeaderboardEntry {
+  user_id: string
+  username: string
+  avatar_url: string | null
+  session_count: number
+  total_hours: number
+}
+
 export default function Dashboard() {
   const { user } = useStore()
   const navigate = useNavigate()
 
   // Data
-  const [tasks,     setTasks]     = useState<Task[]>([])
-  const [events,    setEvents]    = useState<CalendarEvent[]>([])
-  const [habits,    setHabits]    = useState<Habit[]>([])
-  const [habitLogs, setHabitLogs] = useState<HabitLog[]>([])
-  const [goals,     setGoals]     = useState<Goal[]>([])
-  const [notes,     setNotes]     = useState<Note[]>([])
-  const [loading,   setLoading]   = useState(true)
+  const [tasks,       setTasks]       = useState<Task[]>([])
+  const [events,      setEvents]      = useState<CalendarEvent[]>([])
+  const [habits,      setHabits]      = useState<Habit[]>([])
+  const [habitLogs,   setHabitLogs]   = useState<HabitLog[]>([])
+  const [goals,       setGoals]       = useState<Goal[]>([])
+  const [notes,       setNotes]       = useState<Note[]>([])
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
+  const [loading,     setLoading]     = useState(true)
 
   // Calendar
   const [calMonth, setCalMonth] = useState(new Date())
@@ -73,7 +85,7 @@ export default function Dashboard() {
     if (!user) return
     const load = async () => {
       const since = format(subDays(today, GRID_DAYS - 1), 'yyyy-MM-dd')
-      const [t, e, h, hl, g, n, p] = await Promise.all([
+      const [t, e, h, hl, g, n, p, lb] = await Promise.all([
         supabase.from('tasks').select('*').eq('user_id', user.id).neq('status', 'done').order('created_at', { ascending: false }).limit(6),
         supabase.from('events').select('*').eq('user_id', user.id).order('start_time'),
         supabase.from('habits').select('*').eq('user_id', user.id).limit(8),
@@ -81,6 +93,7 @@ export default function Dashboard() {
         supabase.from('goals').select('*').eq('user_id', user.id).eq('status', 'active').limit(6),
         supabase.from('notes').select('*').eq('user_id', user.id).order('updated_at', { ascending: false }).limit(5),
         supabase.from('pomodoro_sessions').select('id').eq('user_id', user.id).eq('session_type', 'work').gte('completed_at', `${todayStr}T00:00:00`),
+        supabase.rpc('get_leaderboard'),
       ])
       setTasks(t.data ?? [])
       setEvents(e.data ?? [])
@@ -89,6 +102,7 @@ export default function Dashboard() {
       setGoals(g.data ?? [])
       setNotes(n.data ?? [])
       setPomSessions(p.data?.length ?? 0)
+      setLeaderboard((lb.data as LeaderboardEntry[]) ?? [])
       setLoading(false)
     }
     load()
@@ -412,6 +426,52 @@ export default function Dashboard() {
         </div>
 
       </div>
+
+      {/* ── LEADERBOARD ──────────────────────────────────────── */}
+      <div className="col-span-12 t-card rounded-2xl border p-4 flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold t-ct-3 uppercase tracking-widest">Leaderboard</span>
+          <span className="text-xs t-ct-3">Top {leaderboard.length} focus champions</span>
+        </div>
+
+        {leaderboard.length === 0 ? (
+          <p className="text-sm t-ct-3 text-center py-4">No sessions logged yet — start the pomodoro timer!</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6">
+            {leaderboard.map((entry, i) => {
+              const rankColor = i < 3 ? RANK_COLORS[i] : undefined
+              const isMe = entry.user_id === user?.id
+              return (
+                <div key={entry.user_id}
+                  className={`flex items-center gap-3 py-2 px-2 rounded-lg transition ${isMe ? 'bg-white/10' : 'hover:bg-white/5'}`}>
+                  {/* Rank */}
+                  <span className="w-6 text-center text-xs font-black flex-shrink-0"
+                    style={{ color: rankColor ?? 'rgba(255,255,255,0.3)' }}>
+                    {i + 1}
+                  </span>
+                  {/* Avatar */}
+                  {entry.avatar_url ? (
+                    <img src={entry.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0 border border-white/20" />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center text-xs font-bold text-white flex-shrink-0 border border-white/20">
+                      {(entry.username || 'U')[0].toUpperCase()}
+                    </div>
+                  )}
+                  {/* Name */}
+                  <span className={`text-xs font-semibold truncate flex-1 ${isMe ? 'text-white' : 't-ct'}`}>
+                    {entry.username}{isMe ? ' (you)' : ''}
+                  </span>
+                  {/* Hours */}
+                  <span className="text-xs t-ct-3 flex-shrink-0 font-mono">
+                    {entry.total_hours}h
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
     </div>
   )
 }
