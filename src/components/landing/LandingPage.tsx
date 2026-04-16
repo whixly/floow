@@ -74,12 +74,12 @@ export default function LandingPage() {
         >
           <defs>
             <radialGradient id="lg" cx="35%" cy="30%" r="60%">
-              <stop offset="0%" stopColor="rgba(240,253,244,1)" />
-              <stop offset="100%" stopColor="rgba(74,222,128,0.9)" />
+              <stop offset="0%" stopColor="#d1fae5" />
+              <stop offset="100%" stopColor="#059669" />
             </radialGradient>
             <radialGradient id="lk" cx="35%" cy="30%" r="60%">
-              <stop offset="0%" stopColor="rgba(255,255,255,0.97)" />
-              <stop offset="100%" stopColor="rgba(134,239,172,0.85)" />
+              <stop offset="0%" stopColor="#ecfdf5" />
+              <stop offset="100%" stopColor="#34d399" />
             </radialGradient>
           </defs>
 

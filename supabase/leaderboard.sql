@@ -1,27 +1,45 @@
--- Run this in Supabase SQL Editor
--- Creates a leaderboard function that aggregates focus sessions per user
+-- Run this in Supabase SQL Editor (re-run to update if already exists)
+-- Points: completed task = 10pts, habit log = 5pts, pomodoro work session = 25pts
 
 CREATE OR REPLACE FUNCTION public.get_leaderboard()
 RETURNS TABLE(
-  user_id   uuid,
-  username  text,
-  avatar_url text,
-  session_count bigint,
-  total_hours   numeric
+  user_id      uuid,
+  username     text,
+  avatar_url   text,
+  total_points bigint,
+  pom_hours    numeric
 )
 LANGUAGE sql
 SECURITY DEFINER
 AS $$
   SELECT
-    p.id                                          AS user_id,
+    p.id AS user_id,
     COALESCE(p.username, split_part(p.email, '@', 1), 'user') AS username,
     p.avatar_url,
-    COUNT(ps.id)                                  AS session_count,
-    ROUND(COUNT(ps.id) * 25.0 / 60, 1)           AS total_hours
+    (
+      COALESCE(pom.cnt, 0) * 25 +
+      COALESCE(hab.cnt, 0) * 5  +
+      COALESCE(tsk.cnt, 0) * 10
+    ) AS total_points,
+    ROUND(COALESCE(pom.cnt, 0) * 25.0 / 60, 1) AS pom_hours
   FROM public.profiles p
-  LEFT JOIN public.pomodoro_sessions ps
-    ON ps.user_id = p.id AND ps.session_type = 'work'
-  GROUP BY p.id, p.username, p.email, p.avatar_url
-  ORDER BY session_count DESC
+  LEFT JOIN (
+    SELECT user_id, COUNT(*) AS cnt
+    FROM public.pomodoro_sessions
+    WHERE session_type = 'work'
+    GROUP BY user_id
+  ) pom ON pom.user_id = p.id
+  LEFT JOIN (
+    SELECT user_id, COUNT(*) AS cnt
+    FROM public.habit_logs
+    GROUP BY user_id
+  ) hab ON hab.user_id = p.id
+  LEFT JOIN (
+    SELECT user_id, COUNT(*) AS cnt
+    FROM public.tasks
+    WHERE status = 'done'
+    GROUP BY user_id
+  ) tsk ON tsk.user_id = p.id
+  ORDER BY total_points DESC
   LIMIT 31;
 $$;

@@ -5,7 +5,7 @@ import {
   eachDayOfInterval, isSameDay, isSameMonth, format,
   addMonths, subMonths, subDays
 } from 'date-fns'
-import { ChevronLeft, ChevronRight, Play, Pause, Square, Coffee } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Play, Pause, Square, Coffee, X, RefreshCw } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useStore } from '../../store/useStore'
 import type { Task, CalendarEvent, Habit, Goal, Note, HabitLog } from '../../types'
@@ -33,12 +33,31 @@ const PIE_FALLBACK = ['#86efac','#6ee7b7','#67e8f9','#a5b4fc','#fca5a5','#fcd34d
 // ── Rank badge colors ─────────────────────────────────────────
 const RANK_COLORS = ['#FFD700', '#C0C0C0', '#CD7F32']
 
+// ── Motivational messages ─────────────────────────────────────
+const MOTIVATIONS = [
+  "You showed up today. That already puts you ahead.",
+  "Every focused session moves you closer to your goals.",
+  "Small consistent actions create extraordinary results.",
+  "Progress, not perfection. You are doing great.",
+  "One habit at a time builds the life you want.",
+  "Your future self is cheering you on. Keep going!",
+  "The best time to start was yesterday. The next best time is now.",
+  "Track it, do it, own it. You have got this.",
+  "Discipline is choosing what you want most over what you want now.",
+  "Consistency is the bridge between goals and accomplishments.",
+  "Every expert was once a beginner. Keep building.",
+  "Focus is your superpower. Use it well today.",
+  "You are not behind. You are exactly where you need to be.",
+  "Each task you complete is a promise kept to yourself.",
+  "Momentum starts with one small action. Go.",
+]
+
 interface LeaderboardEntry {
   user_id: string
   username: string
   avatar_url: string | null
-  session_count: number
-  total_hours: number
+  total_points: number
+  pom_hours: number
 }
 
 export default function Dashboard() {
@@ -54,6 +73,10 @@ export default function Dashboard() {
   const [notes,       setNotes]       = useState<Note[]>([])
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [loading,     setLoading]     = useState(true)
+
+  // Motivational banner
+  const [motiveIdx,  setMotiveIdx]  = useState(() => Math.floor(Math.random() * MOTIVATIONS.length))
+  const [showMotive, setShowMotive] = useState(true)
 
   // Calendar
   const [calMonth, setCalMonth] = useState(new Date())
@@ -167,6 +190,30 @@ export default function Dashboard() {
   return (
     <div className="fade-in grid grid-cols-12 gap-4 items-stretch" style={{ minHeight: 'calc(100vh - 7rem)' }}>
 
+      {/* ── Motivational Banner ───────────────────────────── */}
+      {showMotive && (
+        <div className="col-span-12 flex items-center gap-3 px-4 py-3 rounded-xl border"
+          style={{ background: 'rgba(52,211,153,0.08)', borderColor: 'rgba(52,211,153,0.25)' }}>
+          <span className="text-sm t-ct flex-1 leading-snug">
+            {MOTIVATIONS[motiveIdx]}
+          </span>
+          <button
+            onClick={() => setMotiveIdx(i => (i + 1) % MOTIVATIONS.length)}
+            className="text-white/30 hover:text-white/70 transition flex-shrink-0"
+            title="Next message"
+          >
+            <RefreshCw size={13} />
+          </button>
+          <button
+            onClick={() => setShowMotive(false)}
+            className="text-white/30 hover:text-white/70 transition flex-shrink-0"
+            title="Dismiss"
+          >
+            <X size={13} />
+          </button>
+        </div>
+      )}
+
       {/* ── LEFT: Task + Notes ───────────────────────────── */}
       <div className="col-span-12 lg:col-span-3 grid grid-rows-2 gap-4">
 
@@ -270,30 +317,38 @@ export default function Dashboard() {
             <p className="text-sm t-ct-3 text-center py-3">No habits yet</p>
           ) : (
             <div className="space-y-1.5 overflow-hidden">
-              {/* Day labels every 7th */}
-              <div className="flex gap-[2px]" style={{ paddingLeft: 64 }}>
-                {gridDates.map((d, i) => (
-                  <div key={d} style={{ width: 9, flexShrink: 0 }} className="text-center">
-                    {i % 7 === 0 && <span className="text-[8px] t-ct-3">{format(new Date(d),'d')}</span>}
-                  </div>
-                ))}
+              {/* Day labels aligned with grid */}
+              <div className="flex items-end gap-2">
+                <span className="flex-shrink-0" style={{ width: 64 }} />
+                <div className="flex-1 grid gap-[2px]" style={{ gridTemplateColumns: `repeat(${GRID_DAYS}, 1fr)` }}>
+                  {gridDates.map((d, i) => (
+                    <div key={d} className="overflow-hidden text-center">
+                      {i % 7 === 0 && (
+                        <span className="text-[8px] t-ct-3 block leading-none">{format(new Date(d),'d')}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-              {/* Habit rows */}
+              {/* Habit rows — fill full width */}
               {habits.slice(0, 6).map(habit => {
                 const color = ACCENT_COLORS[habit.color] || '#22c55e'
                 return (
-                  <div key={habit.id} className="flex items-center gap-1.5">
-                    <span className="text-[11px] t-ct truncate flex-shrink-0 text-right" style={{ width: 60 }}>{habit.name}</span>
-                    <div className="flex gap-[2px] flex-shrink-0">
+                  <div key={habit.id} className="flex items-center gap-2">
+                    <span
+                      className="text-[11px] t-ct truncate text-right flex-shrink-0 leading-none"
+                      style={{ width: 62 }}
+                    >
+                      {habit.name}
+                    </span>
+                    <div className="flex-1 grid gap-[2px]" style={{ gridTemplateColumns: `repeat(${GRID_DAYS}, 1fr)` }}>
                       {gridDates.map(d => (
                         <div key={d}
                           title={d}
+                          className="rounded-[2px]"
                           style={{
-                            width: 9, height: 9,
-                            borderRadius: 2,
-                            backgroundColor: isHabitDone(habit.id, d) ? color : 'rgba(255,255,255,0.08)',
-                            opacity: isHabitDone(habit.id, d) ? 1 : 0.55,
-                            flexShrink: 0,
+                            aspectRatio: '1',
+                            backgroundColor: isHabitDone(habit.id, d) ? color : 'rgba(255,255,255,0.09)',
                           }}
                         />
                       ))}
@@ -301,14 +356,6 @@ export default function Dashboard() {
                   </div>
                 )
               })}
-              {/* Legend */}
-              <div className="flex items-center gap-1.5 pt-1 justify-end">
-                <span className="text-[9px] t-ct-3">Less</span>
-                {[0.1, 0.3, 0.6, 0.8, 1].map(o => (
-                  <div key={o} style={{ width: 9, height: 9, borderRadius: 2, backgroundColor: `rgba(134,239,172,${o})`, flexShrink: 0 }} />
-                ))}
-                <span className="text-[9px] t-ct-3">More</span>
-              </div>
             </div>
           )}
         </div>
@@ -431,7 +478,7 @@ export default function Dashboard() {
       <div className="col-span-12 t-card rounded-2xl border p-4 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold t-ct-3 uppercase tracking-widest">Leaderboard</span>
-          <span className="text-xs t-ct-3">Top {leaderboard.length} focus champions</span>
+          <span className="text-xs t-ct-3">Top {leaderboard.length} · tasks+habits+focus</span>
         </div>
 
         {leaderboard.length === 0 ? (
@@ -461,9 +508,10 @@ export default function Dashboard() {
                   <span className={`text-xs font-semibold truncate flex-1 ${isMe ? 'text-white' : 't-ct'}`}>
                     {entry.username}{isMe ? ' (you)' : ''}
                   </span>
-                  {/* Hours */}
-                  <span className="text-xs t-ct-3 flex-shrink-0 font-mono">
-                    {entry.total_hours}h
+                  {/* Points */}
+                  <span className="text-xs flex-shrink-0 font-mono font-semibold"
+                    style={{ color: i < 3 ? RANK_COLORS[i] : 'rgba(255,255,255,0.4)' }}>
+                    {entry.total_points}pts
                   </span>
                 </div>
               )
