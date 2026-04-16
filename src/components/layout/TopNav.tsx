@@ -77,12 +77,12 @@ export default function TopNav() {
           <svg ref={miniSvgRef} viewBox="0 0 100 50" className="w-16 h-10">
             <defs>
               <radialGradient id="mg" cx="35%" cy="30%" r="60%">
-                <stop offset="0%" stopColor="rgba(255,255,255,0.95)" />
-                <stop offset="100%" stopColor="rgba(255,255,255,0.55)" />
+                <stop offset="0%" stopColor="rgba(134,239,172,1)" />
+                <stop offset="100%" stopColor="rgba(20,83,45,0.85)" />
               </radialGradient>
               <radialGradient id="mk" cx="35%" cy="30%" r="60%">
-                <stop offset="0%" stopColor="rgba(255,255,255,0.8)" />
-                <stop offset="100%" stopColor="rgba(255,255,255,0.3)" />
+                <stop offset="0%" stopColor="rgba(187,247,208,0.95)" />
+                <stop offset="100%" stopColor="rgba(6,78,59,0.5)" />
               </radialGradient>
             </defs>
             {/* o1 ring */}
