@@ -47,9 +47,9 @@ export default function Dashboard() {
   const [calMonth, setCalMonth] = useState(new Date())
 
   // Pomodoro mini-timer
-  const [pomMode,    setPomMode]    = useState<PomMode>('work')
-  const [pomTime,    setPomTime]    = useState(POM_DURATIONS.work)
-  const [pomRunning, setPomRunning] = useState(false)
+  const [pomMode,     setPomMode]     = useState<PomMode>('work')
+  const [pomTime,     setPomTime]     = useState(POM_DURATIONS.work)
+  const [pomRunning,  setPomRunning]  = useState(false)
   const [pomSessions, setPomSessions] = useState(0)
   const pomRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -58,12 +58,12 @@ export default function Dashboard() {
 
   // Calendar grid
   const monthStart = startOfMonth(calMonth)
-  const gridStart  = startOfWeek(monthStart,      { weekStartsOn: 1 })
+  const gridStart  = startOfWeek(monthStart,       { weekStartsOn: 1 })
   const gridEnd    = endOfWeek(endOfMonth(calMonth), { weekStartsOn: 1 })
   const calDays    = eachDayOfInterval({ start: gridStart, end: gridEnd })
 
-  // Habit grid — last 30 days
-  const GRID_DAYS = 30
+  // Habit grid — last 21 days (fits the column width)
+  const GRID_DAYS = 21
   const gridDates = Array.from({ length: GRID_DAYS }, (_, i) =>
     format(subDays(today, GRID_DAYS - 1 - i), 'yyyy-MM-dd')
   )
@@ -72,12 +72,12 @@ export default function Dashboard() {
   useEffect(() => {
     if (!user) return
     const load = async () => {
-      const since30 = format(subDays(today, 29), 'yyyy-MM-dd')
+      const since = format(subDays(today, GRID_DAYS - 1), 'yyyy-MM-dd')
       const [t, e, h, hl, g, n, p] = await Promise.all([
         supabase.from('tasks').select('*').eq('user_id', user.id).neq('status', 'done').order('created_at', { ascending: false }).limit(6),
         supabase.from('events').select('*').eq('user_id', user.id).order('start_time'),
         supabase.from('habits').select('*').eq('user_id', user.id).limit(8),
-        supabase.from('habit_logs').select('*').eq('user_id', user.id).gte('completed_date', since30),
+        supabase.from('habit_logs').select('*').eq('user_id', user.id).gte('completed_date', since),
         supabase.from('goals').select('*').eq('user_id', user.id).eq('status', 'active').limit(6),
         supabase.from('notes').select('*').eq('user_id', user.id).order('updated_at', { ascending: false }).limit(5),
         supabase.from('pomodoro_sessions').select('id').eq('user_id', user.id).eq('session_type', 'work').gte('completed_at', `${todayStr}T00:00:00`),
@@ -140,10 +140,9 @@ export default function Dashboard() {
   })
 
   // ── Pomodoro clock face ────────────────────────────────────
-  const pomProgress  = 1 - pomTime / POM_DURATIONS[pomMode]
-  const pomCircumf   = 2 * Math.PI * 72
-  const pomMins      = Math.floor(pomTime / 60)
-  const pomSecs      = pomTime % 60
+  const pomProgress = 1 - pomTime / POM_DURATIONS[pomMode]
+  const pomMins     = Math.floor(pomTime / 60)
+  const pomSecs     = pomTime % 60
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
@@ -152,7 +151,7 @@ export default function Dashboard() {
   )
 
   return (
-    <div className="fade-in grid grid-cols-12 gap-4" style={{ minHeight: 'calc(100vh - 7rem)' }}>
+    <div className="fade-in grid grid-cols-12 gap-4 items-stretch" style={{ minHeight: 'calc(100vh - 7rem)' }}>
 
       {/* ── LEFT: Task + Notes ───────────────────────────── */}
       <div className="col-span-12 lg:col-span-3 grid grid-rows-2 gap-4">
@@ -244,10 +243,10 @@ export default function Dashboard() {
       </div>
 
       {/* ── RIGHT: Habit Tracker + Goal Pie + Pomodoro Clock ─ */}
-      <div className="col-span-12 lg:col-span-4 flex flex-col gap-4">
+      <div className="col-span-12 lg:col-span-4 flex flex-col gap-4 h-full">
 
         {/* HABIT TRACKER — HabitKit grid */}
-        <div className="t-card rounded-2xl border p-4 flex flex-col gap-3">
+        <div className="t-card rounded-2xl border p-4 flex-1 flex flex-col gap-3 min-w-0 overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold t-ct-3 uppercase tracking-widest">Habit Tracker</span>
             <Link to="/app/habits" className="text-xs t-ct-3 hover:text-white transition">view all</Link>
@@ -256,12 +255,12 @@ export default function Dashboard() {
           {habits.length === 0 ? (
             <p className="text-sm t-ct-3 text-center py-3">No habits yet</p>
           ) : (
-            <div className="space-y-2">
-              {/* Day labels: every 5th day */}
-              <div className="flex gap-[3px] pl-[72px]">
+            <div className="space-y-1.5 overflow-hidden">
+              {/* Day labels every 7th */}
+              <div className="flex gap-[2px]" style={{ paddingLeft: 64 }}>
                 {gridDates.map((d, i) => (
-                  <div key={d} className="w-[10px] text-center">
-                    {i % 5 === 0 && <span className="text-[8px] t-ct-3">{format(new Date(d),'d')}</span>}
+                  <div key={d} style={{ width: 9, flexShrink: 0 }} className="text-center">
+                    {i % 7 === 0 && <span className="text-[8px] t-ct-3">{format(new Date(d),'d')}</span>}
                   </div>
                 ))}
               </div>
@@ -269,16 +268,18 @@ export default function Dashboard() {
               {habits.slice(0, 6).map(habit => {
                 const color = ACCENT_COLORS[habit.color] || '#22c55e'
                 return (
-                  <div key={habit.id} className="flex items-center gap-2">
-                    <span className="text-xs t-ct truncate w-[68px] flex-shrink-0 text-right pr-1">{habit.name}</span>
-                    <div className="flex gap-[3px]">
+                  <div key={habit.id} className="flex items-center gap-1.5">
+                    <span className="text-[11px] t-ct truncate flex-shrink-0 text-right" style={{ width: 60 }}>{habit.name}</span>
+                    <div className="flex gap-[2px] flex-shrink-0">
                       {gridDates.map(d => (
                         <div key={d}
                           title={d}
-                          className="w-[10px] h-[10px] rounded-[2px] transition-all"
                           style={{
+                            width: 9, height: 9,
+                            borderRadius: 2,
                             backgroundColor: isHabitDone(habit.id, d) ? color : 'rgba(255,255,255,0.08)',
-                            opacity: isHabitDone(habit.id, d) ? 1 : 0.6,
+                            opacity: isHabitDone(habit.id, d) ? 1 : 0.55,
+                            flexShrink: 0,
                           }}
                         />
                       ))}
@@ -287,10 +288,10 @@ export default function Dashboard() {
                 )
               })}
               {/* Legend */}
-              <div className="flex items-center gap-2 pt-1 justify-end">
+              <div className="flex items-center gap-1.5 pt-1 justify-end">
                 <span className="text-[9px] t-ct-3">Less</span>
                 {[0.1, 0.3, 0.6, 0.8, 1].map(o => (
-                  <div key={o} className="w-[10px] h-[10px] rounded-[2px]" style={{ backgroundColor: `rgba(134,239,172,${o})` }} />
+                  <div key={o} style={{ width: 9, height: 9, borderRadius: 2, backgroundColor: `rgba(134,239,172,${o})`, flexShrink: 0 }} />
                 ))}
                 <span className="text-[9px] t-ct-3">More</span>
               </div>
@@ -299,7 +300,7 @@ export default function Dashboard() {
         </div>
 
         {/* GOAL PIE CHART */}
-        <div className="t-card rounded-2xl border p-4 flex flex-col gap-3">
+        <div className="t-card rounded-2xl border p-4 flex-1 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold t-ct-3 uppercase tracking-widest">Goals</span>
             <Link to="/app/goals" className="text-xs t-ct-3 hover:text-white transition">view all</Link>
@@ -308,19 +309,18 @@ export default function Dashboard() {
           {goals.length === 0 ? (
             <p className="text-sm t-ct-3 text-center py-6">No active goals</p>
           ) : (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-1">
               {/* Pie SVG */}
-              <svg viewBox="0 0 180 180" className="w-[140px] h-[140px] flex-shrink-0">
-                {pieSlices.map((s, i) => (
+              <svg viewBox="0 0 180 180" className="w-[130px] h-[130px] flex-shrink-0">
+                {pieSlices.map((s) => (
                   <path key={s.id} d={s.path} fill={s.color} opacity={0.85}
                     className="hover:opacity-100 transition-opacity cursor-pointer"
                     onClick={() => navigate('/app/goals')}>
                     <title>{s.title} — {s.progress}%</title>
                   </path>
                 ))}
-                {/* Center hole */}
                 <circle cx="90" cy="90" r="44" fill="var(--card-bg)" />
-                <text x="90" y="86" textAnchor="middle" className="fill-current" style={{ fill: 'var(--card-text)', fontSize: 18, fontWeight: 700, fontFamily: 'Consolas' }}>
+                <text x="90" y="86" textAnchor="middle" style={{ fill: 'var(--card-text)', fontSize: 20, fontWeight: 700, fontFamily: 'Consolas' }}>
                   {goals.length}
                 </text>
                 <text x="90" y="102" textAnchor="middle" style={{ fill: 'var(--card-text-3)', fontSize: 9, fontFamily: 'Consolas' }}>
@@ -342,19 +342,17 @@ export default function Dashboard() {
         </div>
 
         {/* POMODORO CLOCK */}
-        <div className="t-card rounded-2xl border p-4 flex flex-col gap-3">
+        <div className="t-card rounded-2xl border p-4 flex-1 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold t-ct-3 uppercase tracking-widest">Pomodoro</span>
             <span className="text-xs t-ct-3">{pomSessions} sessions today</span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-1">
             {/* Clock face */}
-            <div className="relative flex-shrink-0" style={{ width: 130, height: 130 }}>
+            <div className="relative flex-shrink-0" style={{ width: 120, height: 120 }}>
               <svg viewBox="0 0 160 160" className="w-full h-full">
-                {/* Clock face */}
                 <circle cx="80" cy="80" r="74" fill="rgba(0,0,0,0.2)" stroke="rgba(255,255,255,0.08)" strokeWidth="1.5" />
-                {/* Tick marks */}
                 {Array.from({ length: 12 }, (_, i) => {
                   const a = (i * 30 - 90) * Math.PI / 180
                   const r1 = 64, r2 = i % 3 === 0 ? 56 : 60
@@ -365,9 +363,7 @@ export default function Dashboard() {
                       stroke="rgba(255,255,255,0.25)" strokeWidth={i % 3 === 0 ? 2 : 1} strokeLinecap="round" />
                   )
                 })}
-                {/* Progress arc track */}
                 <circle cx="80" cy="80" r="72" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
-                {/* Progress arc */}
                 <circle cx="80" cy="80" r="72" fill="none"
                   stroke={pomMode === 'work' ? 'rgba(134,239,172,0.85)' : 'rgba(147,197,253,0.85)'}
                   strokeWidth="8"
@@ -376,14 +372,12 @@ export default function Dashboard() {
                   strokeLinecap="round"
                   style={{ transition: pomRunning ? 'stroke-dasharray 1s linear' : 'none' }}
                 />
-                {/* Center time */}
                 <text x="80" y="74" textAnchor="middle" style={{ fill: 'var(--card-text)', fontSize: 22, fontWeight: 700, fontFamily: 'Consolas' }}>
                   {String(pomMins).padStart(2,'0')}:{String(pomSecs).padStart(2,'0')}
                 </text>
                 <text x="80" y="92" textAnchor="middle" style={{ fill: 'var(--card-text-3)', fontSize: 9, fontFamily: 'Consolas' }}>
                   {pomMode === 'work' ? 'FOCUS' : 'BREAK'}
                 </text>
-                {/* Session dots */}
                 {Array.from({ length: 4 }, (_, i) => (
                   <circle key={i} cx={68 + i * 9} cy={108} r="3"
                     fill={i < pomSessions % 4 ? 'rgba(134,239,172,0.9)' : 'rgba(255,255,255,0.1)'} />
@@ -393,7 +387,6 @@ export default function Dashboard() {
 
             {/* Controls */}
             <div className="flex flex-col gap-2 flex-1">
-              {/* Play / Pause */}
               <button onClick={() => setPomRunning(r => !r)}
                 className="flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm transition border"
                 style={{
@@ -404,13 +397,11 @@ export default function Dashboard() {
                 {pomRunning ? <Pause size={15} /> : <Play size={15} />}
                 {pomRunning ? 'Pause' : 'Start'}
               </button>
-              {/* Break */}
               <button onClick={() => switchPomMode(pomMode === 'work' ? 'short_break' : 'work')}
                 className="flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-medium border border-white/10 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition">
                 <Coffee size={13} />
                 {pomMode === 'work' ? 'Take Break' : 'Back to Focus'}
               </button>
-              {/* Stop */}
               <button onClick={stopPom}
                 className="flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-medium border border-white/10 bg-white/5 hover:bg-red-500/20 text-white/40 hover:text-red-300 transition">
                 <Square size={13} />
