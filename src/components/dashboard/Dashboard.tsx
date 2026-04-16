@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   startOfMonth, endOfMonth, startOfWeek, endOfWeek,
@@ -7,7 +7,7 @@ import {
 } from 'date-fns'
 import { ChevronLeft, ChevronRight, Play, Pause, Square, Coffee, X, RefreshCw } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
-import { useStore } from '../../store/useStore'
+import { useStore, POM_DURATIONS } from '../../store/useStore'
 import type { Task, CalendarEvent, Habit, Goal, Note, HabitLog } from '../../types'
 import { ACCENT_COLORS } from '../../types'
 
@@ -22,10 +22,6 @@ function slicePath(cx: number, cy: number, ro: number, ri: number, a1: number, a
   const lg = a2 - a1 > 180 ? 1 : 0
   return `M${os.x} ${os.y} A${ro} ${ro} 0 ${lg} 1 ${oe.x} ${oe.y} L${is.x} ${is.y} A${ri} ${ri} 0 ${lg} 0 ${ie.x} ${ie.y}Z`
 }
-
-// ── Pomodoro durations ────────────────────────────────────────
-const POM_DURATIONS = { work: 25 * 60, short_break: 5 * 60 }
-type PomMode = 'work' | 'short_break'
 
 // ── Colors for goals ──────────────────────────────────────────
 const PIE_FALLBACK = ['#86efac','#6ee7b7','#67e8f9','#a5b4fc','#fca5a5','#fcd34d','#c4b5fd','#fb923c']
@@ -61,7 +57,11 @@ interface LeaderboardEntry {
 }
 
 export default function Dashboard() {
-  const { user } = useStore()
+  const {
+    user,
+    pomMode, pomRunning, getPomTime,
+    togglePom, switchPomMode, stopPom, completePomCycle,
+  } = useStore()
   const navigate = useNavigate()
 
   // Data
@@ -73,6 +73,7 @@ export default function Dashboard() {
   const [notes,       setNotes]       = useState<Note[]>([])
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [loading,     setLoading]     = useState(true)
+  const [pomSessions, setPomSessions] = useState(0)
 
   // Motivational banner
   const [motiveIdx,  setMotiveIdx]  = useState(() => Math.floor(Math.random() * MOTIVATIONS.length))
@@ -81,12 +82,8 @@ export default function Dashboard() {
   // Calendar
   const [calMonth, setCalMonth] = useState(new Date())
 
-  // Pomodoro mini-timer
-  const [pomMode,     setPomMode]     = useState<PomMode>('work')
-  const [pomTime,     setPomTime]     = useState(POM_DURATIONS.work)
-  const [pomRunning,  setPomRunning]  = useState(false)
-  const [pomSessions, setPomSessions] = useState(0)
-  const pomRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  // Tick counter — forces re-render while timer is running
+  const [, setTick] = useState(0)
 
   const today    = new Date()
   const todayStr = format(today, 'yyyy-MM-dd')
@@ -131,30 +128,25 @@ export default function Dashboard() {
     load()
   }, [user])
 
-  // ── Pomodoro timer ────────────────────────────────────────
+  // ── Pomodoro tick — re-renders display and detects completion ─
   useEffect(() => {
-    if (pomRunning) {
-      pomRef.current = setInterval(() => {
-        setPomTime(prev => {
-          if (prev <= 1) {
-            clearInterval(pomRef.current!)
-            setPomRunning(false)
-            if (pomMode === 'work') setPomSessions(s => s + 1)
-            return POM_DURATIONS[pomMode]
-          }
-          return prev - 1
-        })
-      }, 1000)
-    } else {
-      if (pomRef.current) clearInterval(pomRef.current)
-    }
-    return () => { if (pomRef.current) clearInterval(pomRef.current) }
+    if (!pomRunning) return
+    const id = setInterval(() => {
+      const t = getPomTime()
+      setTick(n => n + 1)
+      if (t <= 0) {
+        if (pomMode === 'work') {
+          setPomSessions(s => s + 1)
+          supabase.from('pomodoro_sessions').insert({
+            user_id: user?.id,
+            session_type: 'work',
+          })
+        }
+        completePomCycle()
+      }
+    }, 500)
+    return () => clearInterval(id)
   }, [pomRunning, pomMode])
-
-  const switchPomMode = (m: PomMode) => {
-    setPomMode(m); setPomTime(POM_DURATIONS[m]); setPomRunning(false)
-  }
-  const stopPom = () => { setPomRunning(false); setPomTime(POM_DURATIONS[pomMode]) }
 
   // ── Helpers ───────────────────────────────────────────────
   const eventsOnDay = (day: Date) => events.filter(e => isSameDay(new Date(e.start_time), day))
@@ -176,7 +168,8 @@ export default function Dashboard() {
     return { ...g, path, color: ACCENT_COLORS[g.color] || PIE_FALLBACK[i % PIE_FALLBACK.length] }
   })
 
-  // ── Pomodoro clock face ────────────────────────────────────
+  // ── Pomodoro clock face (derived from store) ──────────────
+  const pomTime     = Math.ceil(getPomTime())
   const pomProgress = 1 - pomTime / POM_DURATIONS[pomMode]
   const pomMins     = Math.floor(pomTime / 60)
   const pomSecs     = pomTime % 60
@@ -448,7 +441,7 @@ export default function Dashboard() {
 
             {/* Controls */}
             <div className="flex flex-col gap-2 flex-1">
-              <button onClick={() => setPomRunning(r => !r)}
+              <button onClick={togglePom}
                 className="flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm transition border"
                 style={{
                   background: pomRunning ? 'rgba(255,255,255,0.15)' : 'rgba(134,239,172,0.2)',

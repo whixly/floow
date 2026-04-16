@@ -1,5 +1,6 @@
 -- Run this in Supabase SQL Editor (re-run to update if already exists)
 -- Points: completed task = 10pts, habit log = 5pts, pomodoro work session = 25pts
+-- The SECURITY DEFINER + grants below allow ALL authenticated users to see everyone's data
 
 CREATE OR REPLACE FUNCTION public.get_leaderboard()
 RETURNS TABLE(
@@ -43,3 +44,7 @@ AS $$
   ORDER BY total_points DESC
   LIMIT 31;
 $$;
+
+-- Allow all authenticated users to call this function (sees everyone's data)
+GRANT EXECUTE ON FUNCTION public.get_leaderboard() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_leaderboard() TO anon;

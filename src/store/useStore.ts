@@ -3,6 +3,9 @@ import { persist } from 'zustand/middleware'
 import type { User } from '@supabase/supabase-js'
 import { ACCENT_COLORS, DARK_COLORS } from '../types'
 
+export type PomMode = 'work' | 'short_break'
+export const POM_DURATIONS: Record<PomMode, number> = { work: 25 * 60, short_break: 5 * 60 }
+
 interface AppStore {
   user: User | null
   accentColor: string
@@ -11,6 +14,17 @@ interface AppStore {
   setAccentColor: (color: string) => void
   setTheme: (theme: 'light' | 'dark') => void
   applyTheme: () => void
+
+  // ── Pomodoro (persisted, survives navigation) ──────────────
+  pomMode: PomMode
+  pomRunning: boolean
+  pomStartedAt: number | null    // Date.now() when last started/resumed
+  pomRemainingAtStart: number    // seconds left when last started/resumed
+  togglePom: () => void
+  switchPomMode: (mode: PomMode) => void
+  stopPom: () => void
+  completePomCycle: () => void   // called when timer hits 0
+  getPomTime: () => number       // computed: current seconds remaining
 }
 
 function applyCSS(accentColor: string, theme: 'light' | 'dark') {
@@ -66,12 +80,72 @@ export const useStore = create<AppStore>()(
         const { accentColor, theme } = get()
         applyCSS(accentColor, theme)
       },
+
+      // ── Pomodoro ───────────────────────────────────────────
+      pomMode: 'work',
+      pomRunning: false,
+      pomStartedAt: null,
+      pomRemainingAtStart: POM_DURATIONS.work,
+
+      getPomTime: () => {
+        const { pomRunning, pomStartedAt, pomRemainingAtStart } = get()
+        if (!pomRunning || !pomStartedAt) return pomRemainingAtStart
+        const elapsed = (Date.now() - pomStartedAt) / 1000
+        return Math.max(0, pomRemainingAtStart - elapsed)
+      },
+
+      togglePom: () => {
+        const { pomRunning, pomStartedAt, pomRemainingAtStart } = get()
+        if (pomRunning) {
+          // Pause — snapshot remaining time
+          const elapsed = pomStartedAt ? (Date.now() - pomStartedAt) / 1000 : 0
+          const remaining = Math.max(0, pomRemainingAtStart - elapsed)
+          set({ pomRunning: false, pomStartedAt: null, pomRemainingAtStart: remaining })
+        } else {
+          // Start / Resume
+          set({ pomRunning: true, pomStartedAt: Date.now() })
+        }
+      },
+
+      switchPomMode: (mode: PomMode) => {
+        set({
+          pomMode: mode,
+          pomRunning: false,
+          pomStartedAt: null,
+          pomRemainingAtStart: POM_DURATIONS[mode],
+        })
+      },
+
+      stopPom: () => {
+        const { pomMode } = get()
+        set({
+          pomRunning: false,
+          pomStartedAt: null,
+          pomRemainingAtStart: POM_DURATIONS[pomMode],
+        })
+      },
+
+      completePomCycle: () => {
+        const { pomMode } = get()
+        // Auto-switch mode after completion
+        const next: PomMode = pomMode === 'work' ? 'short_break' : 'work'
+        set({
+          pomMode: next,
+          pomRunning: false,
+          pomStartedAt: null,
+          pomRemainingAtStart: POM_DURATIONS[next],
+        })
+      },
     }),
     {
       name: 'floow-store',
       partialize: (state) => ({
         accentColor: state.accentColor,
         theme: state.theme,
+        pomMode: state.pomMode,
+        pomRunning: state.pomRunning,
+        pomStartedAt: state.pomStartedAt,
+        pomRemainingAtStart: state.pomRemainingAtStart,
       }),
     }
   )
