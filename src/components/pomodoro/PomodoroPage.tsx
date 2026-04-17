@@ -5,24 +5,17 @@ import { useStore } from '../../store/useStore'
 import { playPomSound } from '../../lib/pomSound'
 import { format } from 'date-fns'
 import type { PomodoroSession } from '../../types'
+import type { PomTimerMode } from '../../store/useStore'
+import { DEFAULT_POM_MINS } from '../../store/useStore'
 
 type Mode = 'work' | 'short_break' | 'long_break'
-
-const DEFAULT_MINS: Record<Mode, number> = { work: 25, short_break: 5, long_break: 15 }
 const MODE_LABELS: Record<Mode, string> = { work: 'Focus', short_break: 'Short Break', long_break: 'Long Break' }
 
-function loadDurations(): Record<Mode, number> {
-  try {
-    const saved = localStorage.getItem('pom-durations')
-    return saved ? { ...DEFAULT_MINS, ...JSON.parse(saved) } : DEFAULT_MINS
-  } catch { return DEFAULT_MINS }
-}
-
 export default function PomodoroPage() {
-  const { user } = useStore()
+  const { user, pomCustomMins, setPomCustomMins } = useStore()
   const [mode, setMode] = useState<Mode>('work')
-  const [durations, setDurations] = useState<Record<Mode, number>>(loadDurations)
-  const [timeLeft, setTimeLeft] = useState(() => loadDurations().work * 60)
+  const durations = { ...DEFAULT_POM_MINS, ...pomCustomMins }
+  const [timeLeft, setTimeLeft] = useState(() => ({ ...DEFAULT_POM_MINS, ...pomCustomMins }).work * 60)
   const [running, setRunning] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [sessions, setSessions] = useState<PomodoroSession[]>([])
@@ -33,7 +26,7 @@ export default function PomodoroPage() {
   const modeRef = useRef(mode)
   const today = format(new Date(), 'yyyy-MM-dd')
 
-  useEffect(() => { durationsRef.current = durations }, [durations])
+  useEffect(() => { durationsRef.current = { ...DEFAULT_POM_MINS, ...pomCustomMins } }, [pomCustomMins])
   useEffect(() => { modeRef.current = mode }, [mode])
 
   useEffect(() => {
@@ -88,9 +81,7 @@ export default function PomodoroPage() {
 
   const updateDuration = (m: Mode, mins: number) => {
     const val = Math.max(1, Math.min(120, mins || 1))
-    const next = { ...durations, [m]: val }
-    setDurations(next)
-    localStorage.setItem('pom-durations', JSON.stringify(next))
+    setPomCustomMins(m as PomTimerMode, val)
     if (m === mode && !running) setTimeLeft(val * 60)
   }
 

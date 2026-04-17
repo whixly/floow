@@ -7,7 +7,7 @@ import {
 } from 'date-fns'
 import { ChevronLeft, ChevronRight, Play, Pause, Square, Coffee, X, RefreshCw } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
-import { useStore, POM_DURATIONS } from '../../store/useStore'
+import { useStore } from '../../store/useStore'
 import type { Task, CalendarEvent, Habit, Goal, Note, HabitLog } from '../../types'
 import { ACCENT_COLORS } from '../../types'
 import { fireAchievement } from '../../lib/achievement'
@@ -61,7 +61,7 @@ interface LeaderboardEntry {
 export default function Dashboard() {
   const {
     user,
-    pomMode, pomRunning, getPomTime,
+    pomMode, pomRunning, getPomTime, pomCustomMins,
     togglePom, switchPomMode, stopPom, completePomCycle,
   } = useStore()
   const navigate = useNavigate()
@@ -172,7 +172,7 @@ export default function Dashboard() {
 
   // ── Pomodoro clock face (derived from store) ──────────────
   const pomTime     = Math.ceil(getPomTime())
-  const pomProgress = 1 - pomTime / POM_DURATIONS[pomMode]
+  const pomProgress = 1 - pomTime / (pomCustomMins[pomMode] * 60)
   const pomMins     = Math.floor(pomTime / 60)
   const pomSecs     = pomTime % 60
 

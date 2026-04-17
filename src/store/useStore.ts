@@ -5,7 +5,9 @@ import { ACCENT_COLORS, DARK_COLORS } from '../types'
 import { supabase } from '../lib/supabase'
 
 export type PomMode = 'work' | 'short_break'
+export type PomTimerMode = 'work' | 'short_break' | 'long_break'
 export const POM_DURATIONS: Record<PomMode, number> = { work: 25 * 60, short_break: 5 * 60 }
+export const DEFAULT_POM_MINS: Record<PomTimerMode, number> = { work: 25, short_break: 5, long_break: 15 }
 
 interface AppStore {
   user: User | null
@@ -28,6 +30,8 @@ interface AppStore {
   pomRunning: boolean
   pomStartedAt: number | null
   pomRemainingAtStart: number
+  pomCustomMins: Record<PomTimerMode, number>
+  setPomCustomMins: (mode: PomTimerMode, mins: number) => void
   togglePom: () => void
   switchPomMode: (mode: PomMode) => void
   stopPom: () => void
@@ -113,6 +117,18 @@ export const useStore = create<AppStore>()(
       pomRunning: false,
       pomStartedAt: null,
       pomRemainingAtStart: POM_DURATIONS.work,
+      pomCustomMins: { ...DEFAULT_POM_MINS },
+
+      setPomCustomMins: (mode, mins) => {
+        const val = Math.max(1, Math.min(120, mins))
+        const next = { ...get().pomCustomMins, [mode]: val }
+        set({ pomCustomMins: next })
+        // If this mode is the active one and timer is stopped, reset remaining
+        const { pomMode, pomRunning } = get()
+        if ((mode === pomMode) && !pomRunning) {
+          set({ pomRemainingAtStart: val * 60 })
+        }
+      },
 
       getPomTime: () => {
         const { pomRunning, pomStartedAt, pomRemainingAtStart } = get()
@@ -133,18 +149,19 @@ export const useStore = create<AppStore>()(
       },
 
       switchPomMode: (mode: PomMode) => {
-        set({ pomMode: mode, pomRunning: false, pomStartedAt: null, pomRemainingAtStart: POM_DURATIONS[mode] })
+        const mins = get().pomCustomMins[mode]
+        set({ pomMode: mode, pomRunning: false, pomStartedAt: null, pomRemainingAtStart: mins * 60 })
       },
 
       stopPom: () => {
-        const { pomMode } = get()
-        set({ pomRunning: false, pomStartedAt: null, pomRemainingAtStart: POM_DURATIONS[pomMode] })
+        const { pomMode, pomCustomMins } = get()
+        set({ pomRunning: false, pomStartedAt: null, pomRemainingAtStart: pomCustomMins[pomMode] * 60 })
       },
 
       completePomCycle: () => {
-        const { pomMode } = get()
+        const { pomMode, pomCustomMins } = get()
         const next: PomMode = pomMode === 'work' ? 'short_break' : 'work'
-        set({ pomMode: next, pomRunning: false, pomStartedAt: null, pomRemainingAtStart: POM_DURATIONS[next] })
+        set({ pomMode: next, pomRunning: false, pomStartedAt: null, pomRemainingAtStart: pomCustomMins[next] * 60 })
       },
     }),
     {
@@ -156,6 +173,7 @@ export const useStore = create<AppStore>()(
         pomRunning: state.pomRunning,
         pomStartedAt: state.pomStartedAt,
         pomRemainingAtStart: state.pomRemainingAtStart,
+        pomCustomMins: state.pomCustomMins,
         // avatarUrl + profileUsername NOT persisted — always fresh from server
       }),
     }
