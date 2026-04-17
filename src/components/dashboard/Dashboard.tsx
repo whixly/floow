@@ -75,6 +75,7 @@ export default function Dashboard() {
   const [notes,       setNotes]       = useState<Note[]>([])
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [lbError,     setLbError]     = useState(false)
+  const [lbExpanded,  setLbExpanded]  = useState(false)
   const [loading,     setLoading]     = useState(true)
   const [pomSessions, setPomSessions] = useState(0)
 
@@ -484,46 +485,98 @@ export default function Dashboard() {
           </div>
         ) : leaderboard.length === 0 ? (
           <p className="text-sm t-ct-3 text-center py-4">No activity yet — complete tasks, habits or a pomodoro session!</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6">
-            {leaderboard.map((entry, i) => {
-              const rankColor = i < 3 ? RANK_COLORS[i] : undefined
-              const isMe = entry.user_id === user?.id
-              return (
-                <div key={entry.user_id}
-                  className={`flex items-center gap-3 py-2 px-2 rounded-lg transition ${isMe ? 'bg-white/10' : 'hover:bg-white/5'}`}>
-                  {/* Rank */}
-                  <span className="w-6 text-center text-xs font-black flex-shrink-0"
-                    style={{ color: rankColor ?? 'rgba(255,255,255,0.3)' }}>
-                    {i + 1}
-                  </span>
-                  {/* Avatar */}
-                  {entry.avatar_url ? (
-                    <img src={entry.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0 border border-white/20" />
-                  ) : (
-                    <div className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center text-xs font-bold text-white flex-shrink-0 border border-white/20">
-                      {(entry.username || 'U')[0].toUpperCase()}
+        ) : (() => {
+          const myIdx = leaderboard.findIndex(e => e.user_id === user?.id)
+          const visibleEntries = lbExpanded
+            ? leaderboard
+            : leaderboard.slice(0, 3)
+          // If user is outside top 3 and not expanded, append their entry separately
+          const showMyEntry = !lbExpanded && myIdx >= 3
+          return (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6">
+                {visibleEntries.map((entry, i) => {
+                  const rankColor = i < 3 ? RANK_COLORS[i] : undefined
+                  const isMe = entry.user_id === user?.id
+                  return (
+                    <div key={entry.user_id}
+                      className={`flex items-center gap-3 py-2 px-2 rounded-lg transition ${isMe ? 'bg-white/10' : 'hover:bg-white/5'}`}>
+                      <span className="w-6 text-center text-xs font-black flex-shrink-0"
+                        style={{ color: rankColor ?? 'rgba(255,255,255,0.3)' }}>
+                        {i + 1}
+                      </span>
+                      {entry.avatar_url ? (
+                        <img src={entry.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0 border border-white/20" />
+                      ) : (
+                        <div className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center text-xs font-bold text-white flex-shrink-0 border border-white/20">
+                          {(entry.username || 'U')[0].toUpperCase()}
+                        </div>
+                      )}
+                      <span className={`text-xs font-semibold truncate flex-1 ${isMe ? 'text-white' : 't-ct'}`}>
+                        {entry.username}{isMe ? ' (you)' : ''}
+                      </span>
+                      <div className="flex flex-col items-end flex-shrink-0">
+                        <span className="text-xs font-mono font-semibold"
+                          style={{ color: i < 3 ? RANK_COLORS[i] : 'rgba(255,255,255,0.4)' }}>
+                          {entry.total_points}pts
+                        </span>
+                        <span className="text-[10px] t-ct-3 font-mono">
+                          {entry.pom_hours}h focus
+                        </span>
+                      </div>
                     </div>
-                  )}
-                  {/* Name */}
-                  <span className={`text-xs font-semibold truncate flex-1 ${isMe ? 'text-white' : 't-ct'}`}>
-                    {entry.username}{isMe ? ' (you)' : ''}
-                  </span>
-                  {/* Points + hours */}
-                  <div className="flex flex-col items-end flex-shrink-0">
-                    <span className="text-xs font-mono font-semibold"
-                      style={{ color: i < 3 ? RANK_COLORS[i] : 'rgba(255,255,255,0.4)' }}>
-                      {entry.total_points}pts
-                    </span>
-                    <span className="text-[10px] t-ct-3 font-mono">
-                      {entry.pom_hours}h focus
-                    </span>
+                  )
+                })}
+              </div>
+
+              {/* Current user's entry when outside top 3 and collapsed */}
+              {showMyEntry && (
+                <>
+                  <div className="flex items-center gap-2 my-1">
+                    <div className="flex-1 border-t border-white/10" />
+                    <span className="text-[10px] t-ct-3">···</span>
+                    <div className="flex-1 border-t border-white/10" />
                   </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
+                  {(() => {
+                    const entry = leaderboard[myIdx]
+                    return (
+                      <div className="flex items-center gap-3 py-2 px-2 rounded-lg bg-white/10">
+                        <span className="w-6 text-center text-xs font-black flex-shrink-0" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                          {myIdx + 1}
+                        </span>
+                        {entry.avatar_url ? (
+                          <img src={entry.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0 border border-white/20" />
+                        ) : (
+                          <div className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center text-xs font-bold text-white flex-shrink-0 border border-white/20">
+                            {(entry.username || 'U')[0].toUpperCase()}
+                          </div>
+                        )}
+                        <span className="text-xs font-semibold truncate flex-1 text-white">
+                          {entry.username} (you)
+                        </span>
+                        <div className="flex flex-col items-end flex-shrink-0">
+                          <span className="text-xs font-mono font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                            {entry.total_points}pts
+                          </span>
+                          <span className="text-[10px] t-ct-3 font-mono">{entry.pom_hours}h focus</span>
+                        </div>
+                      </div>
+                    )
+                  })()}
+                </>
+              )}
+
+              {leaderboard.length > 3 && (
+                <button
+                  onClick={() => setLbExpanded(e => !e)}
+                  className="mt-1 w-full text-xs t-ct-3 hover:text-white/70 transition py-1.5 rounded-lg hover:bg-white/5 text-center"
+                >
+                  {lbExpanded ? '▲ Show less' : `▼ Show all ${leaderboard.length} players`}
+                </button>
+              )}
+            </>
+          )
+        })()}
       </div>
 
     </div>
