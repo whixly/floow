@@ -509,11 +509,16 @@ export default function Dashboard() {
                   <span className={`text-xs font-semibold truncate flex-1 ${isMe ? 'text-white' : 't-ct'}`}>
                     {entry.username}{isMe ? ' (you)' : ''}
                   </span>
-                  {/* Points */}
-                  <span className="text-xs flex-shrink-0 font-mono font-semibold"
-                    style={{ color: i < 3 ? RANK_COLORS[i] : 'rgba(255,255,255,0.4)' }}>
-                    {entry.total_points}pts
-                  </span>
+                  {/* Points + hours */}
+                  <div className="flex flex-col items-end flex-shrink-0">
+                    <span className="text-xs font-mono font-semibold"
+                      style={{ color: i < 3 ? RANK_COLORS[i] : 'rgba(255,255,255,0.4)' }}>
+                      {entry.total_points}pts
+                    </span>
+                    <span className="text-[10px] t-ct-3 font-mono">
+                      {entry.pom_hours}h focus
+                    </span>
+                  </div>
                 </div>
               )
             })}
