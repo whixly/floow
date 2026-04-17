@@ -72,18 +72,26 @@ export default function TopNav() {
         <button onClick={() => navigate('/app')} className="flex items-center flex-shrink-0">
           <svg ref={miniSvgRef} viewBox="89 27 360 184" className="h-10 w-auto" style={{ borderRadius: 8 }}>
             <defs>
-              <radialGradient id="mg" cx="35%" cy="30%" r="60%">
-                <stop offset="0%"  stopColor="#5DCAA5" />
-                <stop offset="100%" stopColor="#0F6E56" />
+              {/* Sphere background: bright green highlight top-left → near black edges */}
+              <radialGradient id="bgSphere" cx="28%" cy="25%" r="72%">
+                <stop offset="0%"   stopColor="#1e6b35" />
+                <stop offset="45%"  stopColor="#0b2e17" />
+                <stop offset="100%" stopColor="#020704" />
               </radialGradient>
-              <radialGradient id="mk" cx="35%" cy="30%" r="60%">
-                <stop offset="0%"  stopColor="#1D9E75" />
-                <stop offset="100%" stopColor="#085041" />
+              {/* Dot gradient: vivid green highlight → dark green shadow */}
+              <radialGradient id="mg" cx="28%" cy="25%" r="72%">
+                <stop offset="0%"   stopColor="#4de86e" />
+                <stop offset="55%"  stopColor="#1a9944" />
+                <stop offset="100%" stopColor="#0a4520" />
+              </radialGradient>
+              <radialGradient id="mk" cx="28%" cy="25%" r="72%">
+                <stop offset="0%"   stopColor="#7affa0" />
+                <stop offset="100%" stopColor="#0d5c28" />
               </radialGradient>
             </defs>
 
-            {/* Dark background */}
-            <rect x="89" y="27" width="360" height="184" rx="8" fill="#040a04" />
+            {/* Sphere-style background */}
+            <rect x="89" y="27" width="360" height="184" rx="10" fill="url(#bgSphere)" />
 
             {/* f */}
             {[[108,60],[124,48],[138,54],[108,78],[108,96],[108,114],[126,114],[142,114],[108,132],[108,150],[108,168]].map(([cx,cy]) => (
