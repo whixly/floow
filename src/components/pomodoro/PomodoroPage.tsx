@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Play, Pause, RotateCcw, Coffee, Zap, Settings2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useStore } from '../../store/useStore'
-import { playPomSound } from '../../lib/pomSound'
+import { playPomSound, unlockAudio } from '../../lib/pomSound'
 import { format } from 'date-fns'
 import type { PomodoroSession } from '../../types'
 import type { PomTimerMode } from '../../store/useStore'
@@ -172,7 +172,7 @@ export default function PomodoroPage() {
           <button onClick={reset} className="p-3 rounded-full bg-black/10 t-ct-2 hover:bg-black/20 transition">
             <RotateCcw size={20} />
           </button>
-          <button onClick={() => setRunning(!running)}
+          <button onClick={() => { if (!running) unlockAudio(); setRunning(!running) }}
             className="w-16 h-16 rounded-full bg-[var(--theme-bg)] text-white flex items-center justify-center shadow-lg hover:opacity-90 transition hover:scale-105 border-2 border-white/30">
             {running ? <Pause size={28} /> : <Play size={28} className="ml-1" />}
           </button>

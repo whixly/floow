@@ -11,7 +11,7 @@ import { useStore } from '../../store/useStore'
 import type { Task, CalendarEvent, Habit, Goal, Note, HabitLog } from '../../types'
 import { ACCENT_COLORS } from '../../types'
 import { fireAchievement } from '../../lib/achievement'
-import { playPomSound } from '../../lib/pomSound'
+import { playPomSound, unlockAudio } from '../../lib/pomSound'
 
 // ── Pie chart helpers ─────────────────────────────────────────
 function polar(cx: number, cy: number, r: number, deg: number) {
@@ -443,7 +443,7 @@ export default function Dashboard() {
 
             {/* Controls */}
             <div className="flex flex-col gap-2 flex-1">
-              <button onClick={togglePom}
+              <button onClick={() => { if (!pomRunning) unlockAudio(); togglePom() }}
                 className="flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm transition border"
                 style={{
                   background: pomRunning ? 'rgba(255,255,255,0.15)' : 'rgba(134,239,172,0.2)',
