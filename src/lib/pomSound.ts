@@ -13,35 +13,54 @@ const BREAK_SONGS = [
   '/sounds/break/avengers.mp3',
 ]
 
+// Pre-created elements — iOS requires play() to be called on the SAME element
+// that was unlocked during a user gesture. We unlock all of them upfront.
+let pool: { focus: HTMLAudioElement[]; break: HTMLAudioElement[] } | null = null
 let currentAudio: HTMLAudioElement | null = null
-let unlocked = false
 
-// Call during a user-gesture (click). Plays a silent audio which tells the
-// browser this page has permission to play audio automatically later.
+// Call during a user-gesture (play button click).
+// Silently plays-then-pauses every song element so iOS marks them all as unlocked.
 export function unlockAudio() {
-  if (unlocked) return
-  // Minimal valid WAV encoded as base64 — completely silent, < 1ms
-  const SILENT_WAV = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA'
-  const a = new Audio(SILENT_WAV)
-  a.volume = 0
-  a.play()
-    .then(() => { unlocked = true; a.pause() })
-    .catch(() => {})
+  if (pool) return
+  const makeEl = (src: string) => {
+    const a = new Audio(src)
+    a.volume = 0
+    // play() during user gesture unlocks the element on iOS
+    a.play()
+      .then(() => { a.pause(); a.currentTime = 0; a.volume = 1 })
+      .catch(() => { a.volume = 1 })
+    return a
+  }
+  pool = {
+    focus: FOCUS_SONGS.map(makeEl),
+    break: BREAK_SONGS.map(makeEl),
+  }
 }
 
 export function playPomSound(completedMode: 'work' | 'short_break' | 'long_break') {
-  const songs = completedMode === 'work' ? FOCUS_SONGS : BREAK_SONGS
-  const pick = songs[Math.floor(Math.random() * songs.length)]
-
   if (currentAudio) {
     currentAudio.pause()
-    currentAudio.src = ''
+    currentAudio.currentTime = 0
     currentAudio = null
   }
 
-  const audio = new Audio(pick)
-  currentAudio = audio
-  audio.play().catch((err) => {
-    console.warn('[pomSound] playback failed:', err)
-  })
+  if (pool) {
+    // Reuse the pre-unlocked element — required for iOS autoplay
+    const list = completedMode === 'work' ? pool.focus : pool.break
+    const audio = list[Math.floor(Math.random() * list.length)]
+    audio.currentTime = 0
+    audio.volume = 1
+    currentAudio = audio
+    audio.play().catch((err) => {
+      console.warn('[pomSound] playback failed:', err)
+    })
+  } else {
+    // Fallback for desktop when unlockAudio was skipped
+    const songs = completedMode === 'work' ? FOCUS_SONGS : BREAK_SONGS
+    const audio = new Audio(songs[Math.floor(Math.random() * songs.length)])
+    currentAudio = audio
+    audio.play().catch((err) => {
+      console.warn('[pomSound] playback failed:', err)
+    })
+  }
 }
