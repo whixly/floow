@@ -74,6 +74,7 @@ export default function Dashboard() {
   const [goals,       setGoals]       = useState<Goal[]>([])
   const [notes,       setNotes]       = useState<Note[]>([])
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
+  const [lbError,     setLbError]     = useState(false)
   const [loading,     setLoading]     = useState(true)
   const [pomSessions, setPomSessions] = useState(0)
 
@@ -124,8 +125,8 @@ export default function Dashboard() {
       setGoals(g.data ?? [])
       setNotes(n.data ?? [])
       setPomSessions(p.data?.length ?? 0)
-      if (lb.error) console.error('Leaderboard RPC error:', lb.error)
-      setLeaderboard((lb.data as LeaderboardEntry[]) ?? [])
+      if (lb.error) { console.error('Leaderboard RPC error:', lb.error); setLbError(true) }
+      else setLeaderboard((lb.data as LeaderboardEntry[]) ?? [])
       setLoading(false)
     }
     load()
@@ -476,8 +477,13 @@ export default function Dashboard() {
           <span className="text-xs t-ct-3">Top {leaderboard.length} · 1pt/focus min · 2pt/task&habit</span>
         </div>
 
-        {leaderboard.length === 0 ? (
-          <p className="text-sm t-ct-3 text-center py-4">No sessions logged yet — start the pomodoro timer!</p>
+        {lbError ? (
+          <div className="text-center py-4 space-y-1">
+            <p className="text-sm text-red-400">Leaderboard not set up yet.</p>
+            <p className="text-xs t-ct-3">Run <span className="font-mono bg-black/20 px-1 rounded">supabase/leaderboard.sql</span> in your Supabase SQL Editor.</p>
+          </div>
+        ) : leaderboard.length === 0 ? (
+          <p className="text-sm t-ct-3 text-center py-4">No activity yet — complete tasks, habits or a pomodoro session!</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6">
             {leaderboard.map((entry, i) => {

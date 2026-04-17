@@ -3,6 +3,7 @@ import { Play, Pause, RotateCcw, Coffee, Zap, Settings2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useStore } from '../../store/useStore'
 import { playPomSound, unlockAudio } from '../../lib/pomSound'
+import { fireAchievement } from '../../lib/achievement'
 import { format } from 'date-fns'
 import type { PomodoroSession } from '../../types'
 import type { PomTimerMode } from '../../store/useStore'
@@ -52,6 +53,7 @@ export default function PomodoroPage() {
           setTimeLeft(0)
           setRunning(false)
           playPomSound(modeRef.current)
+          if (modeRef.current === 'work') fireAchievement('pomodoro')
           handleSessionComplete()
         } else {
           timeLeftRef.current = next
