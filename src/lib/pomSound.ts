@@ -14,25 +14,19 @@ const BREAK_SONGS = [
 ]
 
 let currentAudio: HTMLAudioElement | null = null
-let audioCtx: AudioContext | null = null
+let unlocked = false
 
-// Call this inside a user-gesture handler (e.g. clicking Start).
-// Browsers block autoplay unless an AudioContext was resumed during a gesture.
+// Call during a user-gesture (click). Plays a silent audio which tells the
+// browser this page has permission to play audio automatically later.
 export function unlockAudio() {
-  if (audioCtx) return
-  try {
-    audioCtx = new AudioContext()
-    // Resume immediately so the context is active for later programmatic plays
-    if (audioCtx.state === 'suspended') audioCtx.resume()
-    // Play a silent 0.01s buffer to fully unlock the audio pipeline
-    const buf = audioCtx.createBuffer(1, 1, 22050)
-    const src = audioCtx.createBufferSource()
-    src.buffer = buf
-    src.connect(audioCtx.destination)
-    src.start(0)
-  } catch {
-    // AudioContext not supported — fall back gracefully
-  }
+  if (unlocked) return
+  // Minimal valid WAV encoded as base64 — completely silent, < 1ms
+  const SILENT_WAV = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA'
+  const a = new Audio(SILENT_WAV)
+  a.volume = 0
+  a.play()
+    .then(() => { unlocked = true; a.pause() })
+    .catch(() => {})
 }
 
 export function playPomSound(completedMode: 'work' | 'short_break' | 'long_break') {
@@ -48,6 +42,6 @@ export function playPomSound(completedMode: 'work' | 'short_break' | 'long_break
   const audio = new Audio(pick)
   currentAudio = audio
   audio.play().catch((err) => {
-    console.warn('Pomodoro sound blocked:', err)
+    console.warn('[pomSound] playback failed:', err)
   })
 }

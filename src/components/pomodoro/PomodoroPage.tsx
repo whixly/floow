@@ -24,10 +24,12 @@ export default function PomodoroPage() {
   const startedRef = useRef(false)
   const durationsRef = useRef(durations)
   const modeRef = useRef(mode)
+  const timeLeftRef = useRef(timeLeft)
   const today = format(new Date(), 'yyyy-MM-dd')
 
   useEffect(() => { durationsRef.current = { ...DEFAULT_POM_MINS, ...pomCustomMins } }, [pomCustomMins])
   useEffect(() => { modeRef.current = mode }, [mode])
+  useEffect(() => { timeLeftRef.current = timeLeft }, [timeLeft])
 
   useEffect(() => {
     if (!user) return
@@ -43,16 +45,18 @@ export default function PomodoroPage() {
     if (running) {
       startedRef.current = true
       intervalRef.current = setInterval(() => {
-        setTimeLeft(prev => {
-          if (prev <= 1) {
-            clearInterval(intervalRef.current!)
-            setRunning(false)
-            playPomSound(mode)
-            handleSessionComplete()
-            return 0
-          }
-          return prev - 1
-        })
+        const next = timeLeftRef.current - 1
+        if (next <= 0) {
+          clearInterval(intervalRef.current!)
+          timeLeftRef.current = 0
+          setTimeLeft(0)
+          setRunning(false)
+          playPomSound(modeRef.current)
+          handleSessionComplete()
+        } else {
+          timeLeftRef.current = next
+          setTimeLeft(next)
+        }
       }, 1000)
     } else {
       if (intervalRef.current) clearInterval(intervalRef.current)
