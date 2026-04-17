@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Play, Pause, RotateCcw, Coffee, Zap } from 'lucide-react'
+import { Play, Pause, RotateCcw, Coffee, Zap, Settings2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useStore } from '../../store/useStore'
 import { playPomSound } from '../../lib/pomSound'
@@ -8,19 +8,33 @@ import type { PomodoroSession } from '../../types'
 
 type Mode = 'work' | 'short_break' | 'long_break'
 
-const DURATIONS: Record<Mode, number> = { work: 25 * 60, short_break: 5 * 60, long_break: 15 * 60 }
+const DEFAULT_MINS: Record<Mode, number> = { work: 25, short_break: 5, long_break: 15 }
 const MODE_LABELS: Record<Mode, string> = { work: 'Focus', short_break: 'Short Break', long_break: 'Long Break' }
+
+function loadDurations(): Record<Mode, number> {
+  try {
+    const saved = localStorage.getItem('pom-durations')
+    return saved ? { ...DEFAULT_MINS, ...JSON.parse(saved) } : DEFAULT_MINS
+  } catch { return DEFAULT_MINS }
+}
 
 export default function PomodoroPage() {
   const { user } = useStore()
   const [mode, setMode] = useState<Mode>('work')
-  const [timeLeft, setTimeLeft] = useState(DURATIONS['work'])
+  const [durations, setDurations] = useState<Record<Mode, number>>(loadDurations)
+  const [timeLeft, setTimeLeft] = useState(() => loadDurations().work * 60)
   const [running, setRunning] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
   const [sessions, setSessions] = useState<PomodoroSession[]>([])
   const [sessionsToday, setSessionsToday] = useState(0)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const startedRef = useRef(false)
+  const durationsRef = useRef(durations)
+  const modeRef = useRef(mode)
   const today = format(new Date(), 'yyyy-MM-dd')
+
+  useEffect(() => { durationsRef.current = durations }, [durations])
+  useEffect(() => { modeRef.current = mode }, [mode])
 
   useEffect(() => {
     if (!user) return
@@ -55,25 +69,34 @@ export default function PomodoroPage() {
 
   const handleSessionComplete = async () => {
     if (!user || !startedRef.current) return
+    const m = modeRef.current
     const { data } = await supabase.from('pomodoro_sessions').insert({
-      user_id: user.id, duration_minutes: DURATIONS[mode] / 60, session_type: mode,
+      user_id: user.id, duration_minutes: durationsRef.current[m], session_type: m,
     }).select().single()
     if (data) {
       setSessions(prev => [data, ...prev])
-      if (mode === 'work') setSessionsToday(prev => prev + 1)
+      if (m === 'work') setSessionsToday(prev => prev + 1)
     }
     startedRef.current = false
   }
 
   const switchMode = (newMode: Mode) => {
-    setMode(newMode); setTimeLeft(DURATIONS[newMode]); setRunning(false); startedRef.current = false
+    setMode(newMode); setTimeLeft(durations[newMode] * 60); setRunning(false); startedRef.current = false
   }
 
-  const reset = () => { setTimeLeft(DURATIONS[mode]); setRunning(false); startedRef.current = false }
+  const reset = () => { setTimeLeft(durations[mode] * 60); setRunning(false); startedRef.current = false }
+
+  const updateDuration = (m: Mode, mins: number) => {
+    const val = Math.max(1, Math.min(120, mins || 1))
+    const next = { ...durations, [m]: val }
+    setDurations(next)
+    localStorage.setItem('pom-durations', JSON.stringify(next))
+    if (m === mode && !running) setTimeLeft(val * 60)
+  }
 
   const minutes = Math.floor(timeLeft / 60)
   const seconds = timeLeft % 60
-  const progress = 1 - timeLeft / DURATIONS[mode]
+  const progress = 1 - timeLeft / (durations[mode] * 60)
   const circumference = 2 * Math.PI * 90
 
   return (
@@ -83,8 +106,8 @@ export default function PomodoroPage() {
         <p className="t-text-dim text-sm mt-1">{sessionsToday} focus sessions today</p>
       </div>
 
-      {/* Mode Tabs */}
-      <div className="flex gap-2">
+      {/* Mode Tabs + Settings toggle */}
+      <div className="flex items-center gap-2 flex-wrap">
         {(['work', 'short_break', 'long_break'] as Mode[]).map(m => (
           <button key={m} onClick={() => switchMode(m)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${
@@ -95,7 +118,47 @@ export default function PomodoroPage() {
             {MODE_LABELS[m]}
           </button>
         ))}
+        <button
+          onClick={() => setShowSettings(s => !s)}
+          className={`ml-auto flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm transition ${
+            showSettings ? 'bg-white/20 text-white' : 'text-white/60 hover:text-white hover:bg-white/10'
+          }`}
+          title="Timer settings"
+        >
+          <Settings2 size={15} />
+          <span className="hidden sm:inline">Settings</span>
+        </button>
       </div>
+
+      {/* Duration Settings Panel */}
+      {showSettings && (
+        <div className="t-card rounded-xl border p-4 fade-in">
+          <p className="text-xs font-semibold t-ct-3 uppercase tracking-wider mb-3">Timer Durations</p>
+          <div className="grid grid-cols-3 gap-4">
+            {(['work', 'short_break', 'long_break'] as Mode[]).map(m => (
+              <div key={m} className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium t-ct-2 flex items-center gap-1">
+                  {m === 'work' ? <Zap size={11} /> : <Coffee size={11} />}
+                  {MODE_LABELS[m]}
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    max={120}
+                    value={durations[m]}
+                    disabled={running}
+                    onChange={e => updateDuration(m, parseInt(e.target.value) || 1)}
+                    className="w-16 px-2 py-1.5 text-sm text-center rounded-lg border t-input focus:outline-none disabled:opacity-50"
+                  />
+                  <span className="text-xs t-ct-3">min</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          {running && <p className="text-xs text-white/40 mt-3">Stop the timer to change durations</p>}
+        </div>
+      )}
 
       {/* Timer */}
       <div className="t-card rounded-2xl border p-8 flex flex-col items-center">
