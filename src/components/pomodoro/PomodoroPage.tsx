@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Play, Pause, RotateCcw, Coffee, Zap } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useStore } from '../../store/useStore'
+import { playPomSound } from '../../lib/pomSound'
 import { format } from 'date-fns'
 import type { PomodoroSession } from '../../types'
 
@@ -39,6 +40,7 @@ export default function PomodoroPage() {
           if (prev <= 1) {
             clearInterval(intervalRef.current!)
             setRunning(false)
+            playPomSound(mode)
             handleSessionComplete()
             return 0
           }

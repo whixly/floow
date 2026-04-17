@@ -11,6 +11,7 @@ import { useStore, POM_DURATIONS } from '../../store/useStore'
 import type { Task, CalendarEvent, Habit, Goal, Note, HabitLog } from '../../types'
 import { ACCENT_COLORS } from '../../types'
 import { fireAchievement } from '../../lib/achievement'
+import { playPomSound } from '../../lib/pomSound'
 
 // ── Pie chart helpers ─────────────────────────────────────────
 function polar(cx: number, cy: number, r: number, deg: number) {
@@ -141,6 +142,7 @@ export default function Dashboard() {
           supabase.from('pomodoro_sessions').insert({ user_id: user?.id, session_type: 'work' })
           fireAchievement('pomodoro')
         }
+        playPomSound(pomMode)
         completePomCycle()
       }
     }, 500)
