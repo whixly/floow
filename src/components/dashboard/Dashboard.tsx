@@ -474,7 +474,7 @@ export default function Dashboard() {
       <div className="col-span-12 t-card rounded-2xl border p-4 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold t-ct-3 uppercase tracking-widest">Leaderboard</span>
-          <span className="text-xs t-ct-3">Top {leaderboard.length} · 1pt/focus min · 2pt/task&habit</span>
+          <span className="text-xs t-ct-3">Top {leaderboard.length} · 1pt/focus min · 2pt/task&habit · 5pt/quiz&flashcard</span>
         </div>
 
         {lbError ? (

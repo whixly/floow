@@ -108,6 +108,11 @@ export default function FlashcardsPage() {
     setStats(s => ({ ...s, [rating]: s[rating] + 1 }))
     if (cardIdx + 1 >= studyCards.length) {
       setDone(true)
+      if (user && studyDeck) {
+        supabase.from('flashcard_sessions').insert({
+          deck_id: studyDeck.id, user_id: user.id, cards_reviewed: studyCards.length,
+        }).then(() => {})
+      }
     } else {
       setCardIdx(i => i + 1); setFlipped(false)
     }
