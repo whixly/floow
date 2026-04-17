@@ -1,5 +1,5 @@
 const FOCUS_SONGS = [
-  '/sounds/focus/light song.mp3',
+  '/sounds/focus/light_song.mp3',
   '/sounds/focus/pirates_of_carribean.mp3',
   '/sounds/focus/star_wars_theme.mp3',
   '/sounds/focus/f1_theme.mp3',

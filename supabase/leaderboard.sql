@@ -1,6 +1,5 @@
--- Run this in Supabase SQL Editor (re-run to update if already exists)
--- Points: completed task = 10pts, habit log = 5pts, pomodoro work session = 25pts
--- The SECURITY DEFINER + grants below allow ALL authenticated users to see everyone's data
+-- Run this in Supabase SQL Editor (re-run to update)
+-- Points: 1pt per focus minute, 2pts per completed task, 2pts per habit log
 
 CREATE OR REPLACE FUNCTION public.get_leaderboard()
 RETURNS TABLE(
@@ -18,14 +17,14 @@ AS $$
     COALESCE(p.username, split_part(p.email, '@', 1), 'user') AS username,
     p.avatar_url,
     (
-      COALESCE(pom.cnt, 0) * 25 +
-      COALESCE(hab.cnt, 0) * 5  +
-      COALESCE(tsk.cnt, 0) * 10
+      COALESCE(pom.total_mins, 0) +
+      COALESCE(hab.cnt, 0) * 2   +
+      COALESCE(tsk.cnt, 0) * 2
     ) AS total_points,
-    ROUND(COALESCE(pom.cnt, 0) * 25.0 / 60, 1) AS pom_hours
+    ROUND(COALESCE(pom.total_mins, 0) / 60.0, 1) AS pom_hours
   FROM public.profiles p
   LEFT JOIN (
-    SELECT user_id, COUNT(*) AS cnt
+    SELECT user_id, SUM(duration_minutes) AS total_mins
     FROM public.pomodoro_sessions
     WHERE session_type = 'work'
     GROUP BY user_id
@@ -45,6 +44,6 @@ AS $$
   LIMIT 31;
 $$;
 
--- Allow all authenticated users to call this function (sees everyone's data)
+-- Allow all authenticated users to call this function
 GRANT EXECUTE ON FUNCTION public.get_leaderboard() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_leaderboard() TO anon;
