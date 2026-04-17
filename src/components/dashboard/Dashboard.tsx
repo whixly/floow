@@ -124,6 +124,7 @@ export default function Dashboard() {
       setGoals(g.data ?? [])
       setNotes(n.data ?? [])
       setPomSessions(p.data?.length ?? 0)
+      if (lb.error) console.error('Leaderboard RPC error:', lb.error)
       setLeaderboard((lb.data as LeaderboardEntry[]) ?? [])
       setLoading(false)
     }
