@@ -72,21 +72,22 @@ export default function TopNav() {
         <button onClick={() => navigate('/app')} className="flex items-center flex-shrink-0">
           <svg ref={miniSvgRef} viewBox="89 27 360 184" className="h-10 w-auto" style={{ borderRadius: 8 }}>
             <defs>
-              {/* Sphere background: bright green highlight top-left → near black edges */}
+              {/* Background: theme color sphere glow → near black */}
               <radialGradient id="bgSphere" cx="28%" cy="25%" r="72%">
-                <stop offset="0%"   stopColor="#1e6b35" />
-                <stop offset="45%"  stopColor="#0b2e17" />
-                <stop offset="100%" stopColor="#020704" />
+                <stop offset="0%"   style={{ stopColor: 'var(--theme-bg)' }} stopOpacity={0.55} />
+                <stop offset="58%"  style={{ stopColor: 'var(--theme-bg)' }} stopOpacity={0.1} />
+                <stop offset="100%" stopColor="#010101" stopOpacity={1} />
               </radialGradient>
-              {/* Dot gradient: vivid green highlight → dark green shadow */}
+              {/* Dots: bright white highlight → theme color → dark */}
               <radialGradient id="mg" cx="28%" cy="25%" r="72%">
-                <stop offset="0%"   stopColor="#4de86e" />
-                <stop offset="55%"  stopColor="#1a9944" />
-                <stop offset="100%" stopColor="#0a4520" />
+                <stop offset="0%"   stopColor="#ffffff" stopOpacity={0.92} />
+                <stop offset="42%"  style={{ stopColor: 'var(--theme-bg)' }} stopOpacity={1} />
+                <stop offset="100%" stopColor="#010101" stopOpacity={1} />
               </radialGradient>
+              {/* Eyes/lips: bright white → theme */}
               <radialGradient id="mk" cx="28%" cy="25%" r="72%">
-                <stop offset="0%"   stopColor="#7affa0" />
-                <stop offset="100%" stopColor="#0d5c28" />
+                <stop offset="0%"   stopColor="#ffffff" stopOpacity={1} />
+                <stop offset="100%" style={{ stopColor: 'var(--theme-bg)' }} stopOpacity={1} />
               </radialGradient>
             </defs>
 
