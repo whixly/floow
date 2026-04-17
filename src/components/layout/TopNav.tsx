@@ -21,11 +21,11 @@ const navItems = [
   { to: '/app/settings', icon: Settings, label: 'Settings' },
 ]
 
-// Eye center positions in mini-SVG viewBox (0 0 100 50)
-const ME1 = { x: 37, y: 22 }
-const ME2 = { x: 63, y: 22 }
+// Eye center positions — same coordinate space as LandingPage
+const ME1 = { x: 231, y: 132 }
+const ME2 = { x: 309, y: 132 }
 
-function calcEye(cx: number, cy: number, tx: number, ty: number, maxR = 4) {
+function calcEye(cx: number, cy: number, tx: number, ty: number, maxR = 7) {
   const dx = tx - cx; const dy = ty - cy
   const dist = Math.sqrt(dx * dx + dy * dy)
   if (dist < 1) return { x: cx, y: cy }
@@ -68,45 +68,57 @@ export default function TopNav() {
     <header className="t-sidebar border-b border-white/10 fixed top-0 left-0 right-0 z-20">
       <div className="flex items-center h-14 px-4 gap-3 max-w-screen-xl mx-auto">
 
-        {/* ── Logo — sphere-style dark background ── */}
+        {/* ── Logo — full floow wordmark ── */}
         <button onClick={() => navigate('/app')} className="flex items-center flex-shrink-0">
-          <svg ref={miniSvgRef} viewBox="0 0 100 50" className="w-16 h-10" style={{ borderRadius: 8 }}>
+          <svg ref={miniSvgRef} viewBox="89 27 360 184" className="h-10 w-auto" style={{ borderRadius: 8 }}>
             <defs>
-              {/* Sphere-style gradient: bright lime highlight → dark green shadow */}
-              <radialGradient id="mg" cx="28%" cy="22%" r="68%">
-                <stop offset="0%"   stopColor="#a3ff9a" />
-                <stop offset="38%"  stopColor="#22c55e" />
-                <stop offset="100%" stopColor="#071a07" />
+              <radialGradient id="mg" cx="35%" cy="30%" r="60%">
+                <stop offset="0%"  stopColor="#5DCAA5" />
+                <stop offset="100%" stopColor="#0F6E56" />
               </radialGradient>
-              <radialGradient id="mk" cx="28%" cy="22%" r="68%">
-                <stop offset="0%"   stopColor="#ffffff" />
-                <stop offset="45%"  stopColor="#86efac" />
-                <stop offset="100%" stopColor="#166534" />
+              <radialGradient id="mk" cx="35%" cy="30%" r="60%">
+                <stop offset="0%"  stopColor="#1D9E75" />
+                <stop offset="100%" stopColor="#085041" />
               </radialGradient>
             </defs>
 
             {/* Dark background */}
-            <rect x="0" y="0" width="100" height="50" rx="8" fill="#040a04" />
+            <rect x="89" y="27" width="360" height="184" rx="8" fill="#040a04" />
+
+            {/* f */}
+            {[[108,60],[124,48],[138,54],[108,78],[108,96],[108,114],[126,114],[142,114],[108,132],[108,150],[108,168]].map(([cx,cy]) => (
+              <circle key={`f${cx}${cy}`} cx={cx} cy={cy} r="7" fill="url(#mg)" />
+            ))}
+
+            {/* l */}
+            {[[174,42],[174,60],[174,78],[174,96],[174,114],[174,132],[174,150],[174,168]].map(([cx,cy]) => (
+              <circle key={`l${cx}${cy}`} cx={cx} cy={cy} r="7" fill="url(#mg)" />
+            ))}
 
             {/* o1 ring */}
-            {[[20,8],[30,8],[20,16],[30,16],[20,24],[30,24],[20,32],[28,32]].map(([cx,cy]) => (
-              <circle key={`m1${cx}${cy}`} cx={cx} cy={cy} r="3.5" fill="url(#mg)" />
+            {[[204,96],[222,96],[240,96],[258,96],[204,114],[258,114],[204,132],[258,132],[204,150],[258,150],[204,168],[222,168],[240,168],[258,168]].map(([cx,cy]) => (
+              <circle key={`o1${cx}${cy}`} cx={cx} cy={cy} r="7" fill="url(#mg)" />
             ))}
             {/* o1 eye */}
-            <circle cx={e1.x} cy={e1.y} r="4.5" fill="url(#mk)" />
+            <circle cx={e1.x} cy={e1.y} r="9" fill="url(#mk)" />
 
             {/* o2 ring */}
-            {[[50,8],[60,8],[50,16],[60,16],[50,24],[60,24],[50,32],[58,32]].map(([cx,cy]) => (
-              <circle key={`m2${cx}${cy}`} cx={cx} cy={cy} r="3.5" fill="url(#mg)" />
+            {[[282,96],[300,96],[318,96],[336,96],[282,114],[336,114],[282,132],[336,132],[282,150],[336,150],[282,168],[300,168],[318,168],[336,168]].map(([cx,cy]) => (
+              <circle key={`o2${cx}${cy}`} cx={cx} cy={cy} r="7" fill="url(#mg)" />
             ))}
             {/* o2 eye */}
-            <circle cx={e2.x} cy={e2.y} r="4.5" fill="url(#mk)" />
+            <circle cx={e2.x} cy={e2.y} r="9" fill="url(#mk)" />
+
+            {/* w — no middle dots on top row */}
+            {[[362,96],[434,96],[362,114],[398,114],[434,114],[362,132],[398,132],[434,132],[362,150],[380,150],[398,150],[416,150],[434,150],[362,168],[380,168],[416,168],[434,168]].map(([cx,cy]) => (
+              <circle key={`w${cx}${cy}`} cx={cx} cy={cy} r="7" fill="url(#mg)" />
+            ))}
 
             {/* lips — 3 throbbing dots */}
-            {[37, 45, 53].map((cx, i) => (
+            {[258, 270, 282].map((cx, i) => (
               <circle
                 key={`lip${i}`}
-                cx={cx} cy={43} r="2.5"
+                cx={cx} cy={196} r="5"
                 fill="url(#mk)"
                 style={{
                   animation: `lipPulse 1.4s ease-in-out ${i * 0.22}s infinite`,

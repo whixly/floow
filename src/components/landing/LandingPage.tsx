@@ -74,12 +74,12 @@ export default function LandingPage() {
         >
           <defs>
             <radialGradient id="lg" cx="35%" cy="30%" r="60%">
-              <stop offset="0%" stopColor="#d1fae5" />
-              <stop offset="100%" stopColor="#059669" />
+              <stop offset="0%" stopColor="#5DCAA5" />
+              <stop offset="100%" stopColor="#0F6E56" />
             </radialGradient>
             <radialGradient id="lk" cx="35%" cy="30%" r="60%">
-              <stop offset="0%" stopColor="#ecfdf5" />
-              <stop offset="100%" stopColor="#34d399" />
+              <stop offset="0%" stopColor="#1D9E75" />
+              <stop offset="100%" stopColor="#085041" />
             </radialGradient>
           </defs>
 
@@ -107,8 +107,8 @@ export default function LandingPage() {
           {/* o2 eye — dynamic */}
           <circle cx={e2.x} cy={e2.y} r="9" fill="url(#lk)" style={{ transition: 'cx 0.05s, cy 0.05s' }} />
 
-          {/* ── w ── */}
-          {[[366,96],[420,96],[366,114],[420,114],[366,132],[393,132],[420,132],[366,150],[379,150],[393,150],[407,150],[420,150],[372,168],[393,168],[414,168]].map(([cx,cy]) => (
+          {/* ── w ── (no middle dots on top row) */}
+          {[[362,96],[434,96],[362,114],[398,114],[434,114],[362,132],[398,132],[434,132],[362,150],[380,150],[398,150],[416,150],[434,150],[362,168],[380,168],[416,168],[434,168]].map(([cx,cy]) => (
             <circle key={`w${cx}${cy}`} cx={cx} cy={cy} r="7" fill="url(#lg)" />
           ))}
 

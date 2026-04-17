@@ -27,7 +27,7 @@ export default function SettingsPage() {
     if (!file || !user) return
     setUploadingAvatar(true)
     const ext  = file.name.split('.').pop() ?? 'jpg'
-    const path = `${user.id}.${ext}`
+    const path = `${user.id}/avatar.${ext}`
     const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
     if (!error) {
       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
