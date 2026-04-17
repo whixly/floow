@@ -21,7 +21,7 @@ const navItems = [
   { to: '/app/settings', icon: Settings, label: 'Settings' },
 ]
 
-// Eye center positions in mini-SVG viewBox (0 0 100 40)
+// Eye center positions in mini-SVG viewBox (0 0 100 50)
 const ME1 = { x: 37, y: 22 }
 const ME2 = { x: 63, y: 22 }
 
@@ -34,18 +34,11 @@ function calcEye(cx: number, cy: number, tx: number, ty: number, maxR = 4) {
 }
 
 export default function TopNav() {
-  const { user } = useStore()
+  const { user, avatarUrl, profileUsername } = useStore()
   const navigate = useNavigate()
   const miniSvgRef = useRef<SVGSVGElement>(null)
   const [e1, setE1] = useState(ME1)
   const [e2, setE2] = useState(ME2)
-  const [profile, setProfile] = useState<{ username: string; avatar_url: string | null } | null>(null)
-
-  useEffect(() => {
-    if (!user) return
-    supabase.from('profiles').select('username, avatar_url').eq('id', user.id).single()
-      .then(({ data }) => { if (data) setProfile(data) })
-  }, [user])
 
   useEffect(() => {
     const onMouse = (ev: MouseEvent) => {
@@ -68,35 +61,47 @@ export default function TopNav() {
     navigate('/')
   }
 
+  const displayName = profileUsername ?? user?.email?.split('@')[0] ?? 'user'
+  const initial = displayName[0].toUpperCase()
+
   return (
     <header className="t-sidebar border-b border-white/10 fixed top-0 left-0 right-0 z-20">
       <div className="flex items-center h-14 px-4 gap-3 max-w-screen-xl mx-auto">
 
-        {/* ── Logo with mini eyes + lips ── */}
+        {/* ── Logo — sphere-style dark background ── */}
         <button onClick={() => navigate('/app')} className="flex items-center flex-shrink-0">
-          <svg ref={miniSvgRef} viewBox="0 0 100 50" className="w-16 h-10">
+          <svg ref={miniSvgRef} viewBox="0 0 100 50" className="w-16 h-10" style={{ borderRadius: 8 }}>
             <defs>
-              <radialGradient id="mg" cx="35%" cy="30%" r="60%">
-                <stop offset="0%" stopColor="#d1fae5" />
-                <stop offset="100%" stopColor="#059669" />
+              {/* Sphere-style gradient: bright lime highlight → dark green shadow */}
+              <radialGradient id="mg" cx="28%" cy="22%" r="68%">
+                <stop offset="0%"   stopColor="#a3ff9a" />
+                <stop offset="38%"  stopColor="#22c55e" />
+                <stop offset="100%" stopColor="#071a07" />
               </radialGradient>
-              <radialGradient id="mk" cx="35%" cy="30%" r="60%">
-                <stop offset="0%" stopColor="#ecfdf5" />
-                <stop offset="100%" stopColor="#34d399" />
+              <radialGradient id="mk" cx="28%" cy="22%" r="68%">
+                <stop offset="0%"   stopColor="#ffffff" />
+                <stop offset="45%"  stopColor="#86efac" />
+                <stop offset="100%" stopColor="#166534" />
               </radialGradient>
             </defs>
+
+            {/* Dark background */}
+            <rect x="0" y="0" width="100" height="50" rx="8" fill="#040a04" />
+
             {/* o1 ring */}
             {[[20,8],[30,8],[20,16],[30,16],[20,24],[30,24],[20,32],[28,32]].map(([cx,cy]) => (
               <circle key={`m1${cx}${cy}`} cx={cx} cy={cy} r="3.5" fill="url(#mg)" />
             ))}
             {/* o1 eye */}
             <circle cx={e1.x} cy={e1.y} r="4.5" fill="url(#mk)" />
+
             {/* o2 ring */}
             {[[50,8],[60,8],[50,16],[60,16],[50,24],[60,24],[50,32],[58,32]].map(([cx,cy]) => (
               <circle key={`m2${cx}${cy}`} cx={cx} cy={cy} r="3.5" fill="url(#mg)" />
             ))}
             {/* o2 eye */}
             <circle cx={e2.x} cy={e2.y} r="4.5" fill="url(#mk)" />
+
             {/* lips — 3 throbbing dots */}
             {[37, 45, 53].map((cx, i) => (
               <circle
@@ -139,18 +144,18 @@ export default function TopNav() {
         <div className="flex items-center gap-2 flex-shrink-0">
           <div className="hidden sm:flex flex-col items-end">
             <span className="text-white text-xs font-semibold leading-tight">
-              {profile?.username ?? user?.email?.split('@')[0] ?? 'user'}
+              {displayName}
             </span>
           </div>
-          {profile?.avatar_url ? (
+          {avatarUrl ? (
             <img
-              src={profile.avatar_url}
+              src={avatarUrl}
               alt="avatar"
               className="w-8 h-8 rounded-full object-cover border-2 border-white/30"
             />
           ) : (
             <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white text-sm font-bold border-2 border-white/30">
-              {(profile?.username ?? user?.email ?? 'U')[0].toUpperCase()}
+              {initial}
             </div>
           )}
           <button

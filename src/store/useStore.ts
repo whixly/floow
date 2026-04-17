@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { User } from '@supabase/supabase-js'
 import { ACCENT_COLORS, DARK_COLORS } from '../types'
+import { supabase } from '../lib/supabase'
 
 export type PomMode = 'work' | 'short_break'
 export const POM_DURATIONS: Record<PomMode, number> = { work: 25 * 60, short_break: 5 * 60 }
@@ -15,16 +16,23 @@ interface AppStore {
   setTheme: (theme: 'light' | 'dark') => void
   applyTheme: () => void
 
+  // ── Profile (synced from Supabase, not persisted) ──────────
+  avatarUrl: string | null
+  profileUsername: string | null
+  setAvatarUrl: (url: string | null) => void
+  setProfileUsername: (name: string) => void
+  loadProfile: (userId: string) => Promise<void>
+
   // ── Pomodoro (persisted, survives navigation) ──────────────
   pomMode: PomMode
   pomRunning: boolean
-  pomStartedAt: number | null    // Date.now() when last started/resumed
-  pomRemainingAtStart: number    // seconds left when last started/resumed
+  pomStartedAt: number | null
+  pomRemainingAtStart: number
   togglePom: () => void
   switchPomMode: (mode: PomMode) => void
   stopPom: () => void
-  completePomCycle: () => void   // called when timer hits 0
-  getPomTime: () => number       // computed: current seconds remaining
+  completePomCycle: () => void
+  getPomTime: () => number
 }
 
 function applyCSS(accentColor: string, theme: 'light' | 'dark') {
@@ -81,6 +89,25 @@ export const useStore = create<AppStore>()(
         applyCSS(accentColor, theme)
       },
 
+      // ── Profile ────────────────────────────────────────────
+      avatarUrl: null,
+      profileUsername: null,
+      setAvatarUrl: (url) => set({ avatarUrl: url }),
+      setProfileUsername: (name) => set({ profileUsername: name }),
+      loadProfile: async (userId: string) => {
+        const { data } = await supabase
+          .from('profiles')
+          .select('username, avatar_url')
+          .eq('id', userId)
+          .single()
+        if (data) {
+          set({
+            avatarUrl: data.avatar_url ?? null,
+            profileUsername: data.username ?? null,
+          })
+        }
+      },
+
       // ── Pomodoro ───────────────────────────────────────────
       pomMode: 'work',
       pomRunning: false,
@@ -97,44 +124,27 @@ export const useStore = create<AppStore>()(
       togglePom: () => {
         const { pomRunning, pomStartedAt, pomRemainingAtStart } = get()
         if (pomRunning) {
-          // Pause — snapshot remaining time
           const elapsed = pomStartedAt ? (Date.now() - pomStartedAt) / 1000 : 0
           const remaining = Math.max(0, pomRemainingAtStart - elapsed)
           set({ pomRunning: false, pomStartedAt: null, pomRemainingAtStart: remaining })
         } else {
-          // Start / Resume
           set({ pomRunning: true, pomStartedAt: Date.now() })
         }
       },
 
       switchPomMode: (mode: PomMode) => {
-        set({
-          pomMode: mode,
-          pomRunning: false,
-          pomStartedAt: null,
-          pomRemainingAtStart: POM_DURATIONS[mode],
-        })
+        set({ pomMode: mode, pomRunning: false, pomStartedAt: null, pomRemainingAtStart: POM_DURATIONS[mode] })
       },
 
       stopPom: () => {
         const { pomMode } = get()
-        set({
-          pomRunning: false,
-          pomStartedAt: null,
-          pomRemainingAtStart: POM_DURATIONS[pomMode],
-        })
+        set({ pomRunning: false, pomStartedAt: null, pomRemainingAtStart: POM_DURATIONS[pomMode] })
       },
 
       completePomCycle: () => {
         const { pomMode } = get()
-        // Auto-switch mode after completion
         const next: PomMode = pomMode === 'work' ? 'short_break' : 'work'
-        set({
-          pomMode: next,
-          pomRunning: false,
-          pomStartedAt: null,
-          pomRemainingAtStart: POM_DURATIONS[next],
-        })
+        set({ pomMode: next, pomRunning: false, pomStartedAt: null, pomRemainingAtStart: POM_DURATIONS[next] })
       },
     }),
     {
@@ -146,6 +156,7 @@ export const useStore = create<AppStore>()(
         pomRunning: state.pomRunning,
         pomStartedAt: state.pomStartedAt,
         pomRemainingAtStart: state.pomRemainingAtStart,
+        // avatarUrl + profileUsername NOT persisted — always fresh from server
       }),
     }
   )

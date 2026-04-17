@@ -17,7 +17,7 @@ import FlashcardsPage from './components/flashcards/FlashcardsPage'
 import QuizPage from './components/quiz/QuizPage'
 
 function App() {
-  const { setUser, applyTheme } = useStore()
+  const { setUser, applyTheme, loadProfile } = useStore()
   const [loading, setLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
@@ -27,12 +27,14 @@ function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       setIsAuthenticated(!!session)
+      if (session?.user) loadProfile(session.user.id)
       setLoading(false)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
       setIsAuthenticated(!!session)
+      if (session?.user) loadProfile(session.user.id)
     })
 
     return () => subscription.unsubscribe()

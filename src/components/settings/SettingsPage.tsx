@@ -5,7 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { ACCENT_COLORS } from '../../types'
 
 export default function SettingsPage() {
-  const { user, accentColor, setAccentColor } = useStore()
+  const { user, accentColor, setAccentColor, setAvatarUrl: storeSetAvatarUrl, setProfileUsername: storeSetProfileUsername } = useStore()
   const [fullName,       setFullName]       = useState(user?.user_metadata?.full_name ?? '')
   const [saving,         setSaving]         = useState(false)
   const [saved,          setSaved]          = useState(false)
@@ -32,7 +32,9 @@ export default function SettingsPage() {
     if (!error) {
       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
       await supabase.from('profiles').upsert({ id: user.id, avatar_url: publicUrl })
-      setAvatarUrl(publicUrl + `?t=${Date.now()}`)
+      const urlWithBust = publicUrl + `?t=${Date.now()}`
+      setAvatarUrl(urlWithBust)
+      storeSetAvatarUrl(urlWithBust)
     }
     setUploadingAvatar(false)
     // reset so same file can be re-uploaded
@@ -46,6 +48,7 @@ export default function SettingsPage() {
     if (user) {
       await supabase.from('profiles').upsert({ id: user.id, full_name: fullName, accent_color: accentColor })
     }
+    storeSetProfileUsername(fullName)
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
