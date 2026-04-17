@@ -473,9 +473,12 @@ export default function Dashboard() {
 
       {/* ── LEADERBOARD ──────────────────────────────────────── */}
       <div className="col-span-12 t-card rounded-2xl border p-4 flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold t-ct-3 uppercase tracking-widest">Leaderboard</span>
-          <span className="text-xs t-ct-3">Top {leaderboard.length} · 1pt/focus min · 2pt/task&habit · 5pt/quiz&flashcard</span>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs font-bold t-ct-3 uppercase tracking-widest flex-shrink-0">Leaderboard</span>
+          <span className="text-xs t-ct-3 text-right leading-4">
+            <span className="hidden sm:inline">Top {leaderboard.length} · 1pt/focus min · 2pt/task&habit · 5pt/quiz&flashcard</span>
+            <span className="sm:hidden">1pt focus · 2pt task/habit · 5pt quiz/card</span>
+          </span>
         </div>
 
         {lbError ? (
@@ -515,12 +518,12 @@ export default function Dashboard() {
                       <span className={`text-xs font-semibold truncate flex-1 ${isMe ? 'text-white' : 't-ct'}`}>
                         {entry.username}{isMe ? ' (you)' : ''}
                       </span>
-                      <div className="flex flex-col items-end flex-shrink-0">
-                        <span className="text-xs font-mono font-semibold"
+                      <div className="flex flex-col items-end flex-shrink-0 w-14">
+                        <span className="text-xs font-mono font-semibold tabular-nums"
                           style={{ color: i < 3 ? RANK_COLORS[i] : 'rgba(255,255,255,0.4)' }}>
                           {entry.total_points}pts
                         </span>
-                        <span className="text-[10px] t-ct-3 font-mono">
+                        <span className="text-[10px] t-ct-3 font-mono tabular-nums">
                           {entry.pom_hours}h focus
                         </span>
                       </div>
@@ -554,11 +557,11 @@ export default function Dashboard() {
                         <span className="text-xs font-semibold truncate flex-1 text-white">
                           {entry.username} (you)
                         </span>
-                        <div className="flex flex-col items-end flex-shrink-0">
-                          <span className="text-xs font-mono font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                        <div className="flex flex-col items-end flex-shrink-0 w-14">
+                          <span className="text-xs font-mono font-semibold tabular-nums" style={{ color: 'rgba(255,255,255,0.4)' }}>
                             {entry.total_points}pts
                           </span>
-                          <span className="text-[10px] t-ct-3 font-mono">{entry.pom_hours}h focus</span>
+                          <span className="text-[10px] t-ct-3 font-mono tabular-nums">{entry.pom_hours}h focus</span>
                         </div>
                       </div>
                     )
