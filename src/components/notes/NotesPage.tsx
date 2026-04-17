@@ -82,8 +82,8 @@ export default function NotesPage() {
       </div>
 
       <div className="flex gap-4 h-[calc(100vh-180px)]">
-        {/* Left Panel */}
-        <div className="w-72 flex flex-col gap-3 flex-shrink-0">
+        {/* Left Panel — hidden on mobile when a note is open */}
+        <div className={`flex flex-col gap-3 flex-shrink-0 w-full md:w-72 ${selectedNote ? 'hidden md:flex' : 'flex'}`}>
           <div className="relative">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search notes..."
@@ -149,13 +149,19 @@ export default function NotesPage() {
           </div>
         </div>
 
-        {/* Editor */}
-        <div className="flex-1 t-card rounded-xl border flex flex-col overflow-hidden">
+        {/* Editor — hidden on mobile when no note is open */}
+        <div className={`flex-1 t-card rounded-xl border flex-col overflow-hidden ${selectedNote ? 'flex' : 'hidden md:flex'}`}>
           {selectedNote ? (
             <>
               <div className="flex items-center justify-between px-5 py-3 border-b border-black/10">
-                <input value={selectedNote.title} onChange={e => updateNote(selectedNote, { title: e.target.value })}
-                  className="text-lg font-semibold t-ct bg-transparent flex-1 focus:outline-none" placeholder="Note title" />
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  {/* Back button — mobile only */}
+                  <button onClick={() => setSelectedNote(null)} className="md:hidden t-ct-2 hover:t-ct transition flex-shrink-0" title="Back">
+                    ←
+                  </button>
+                  <input value={selectedNote.title} onChange={e => updateNote(selectedNote, { title: e.target.value })}
+                    className="text-lg font-semibold t-ct bg-transparent flex-1 focus:outline-none min-w-0" placeholder="Note title" />
+                </div>
                 <div className="flex items-center gap-2">
                   <button onClick={() => updateNote(selectedNote, { is_pinned: !selectedNote.is_pinned })}
                     className={`p-1.5 rounded hover:bg-black/5 transition ${selectedNote.is_pinned ? 'text-yellow-500' : 't-ct-3'}`}>
