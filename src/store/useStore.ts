@@ -31,7 +31,10 @@ interface AppStore {
   pomStartedAt: number | null
   pomRemainingAtStart: number
   pomCustomMins: Record<PomTimerMode, number>
+  pomSessionsToday: number
   setPomCustomMins: (mode: PomTimerMode, mins: number) => void
+  incrementPomSessions: () => void
+  setPomSessionsToday: (n: number) => void
   togglePom: () => void
   switchPomMode: (mode: PomMode) => void
   stopPom: () => void
@@ -118,6 +121,10 @@ export const useStore = create<AppStore>()(
       pomStartedAt: null,
       pomRemainingAtStart: POM_DURATIONS.work,
       pomCustomMins: { ...DEFAULT_POM_MINS },
+      pomSessionsToday: 0,
+
+      incrementPomSessions: () => set(s => ({ pomSessionsToday: s.pomSessionsToday + 1 })),
+      setPomSessionsToday: (n) => set({ pomSessionsToday: n }),
 
       setPomCustomMins: (mode, mins) => {
         const val = Math.max(1, Math.min(120, mins))

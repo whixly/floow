@@ -63,6 +63,7 @@ export default function Dashboard() {
     user,
     pomMode, pomRunning, getPomTime, pomCustomMins,
     togglePom, switchPomMode, stopPom, completePomCycle,
+    pomSessionsToday, incrementPomSessions, setPomSessionsToday,
   } = useStore()
   const navigate = useNavigate()
 
@@ -77,7 +78,6 @@ export default function Dashboard() {
   const [lbError,     setLbError]     = useState(false)
   const [lbExpanded,  setLbExpanded]  = useState(false)
   const [loading,     setLoading]     = useState(true)
-  const [pomSessions, setPomSessions] = useState(0)
 
   // Motivational banner
   const [motiveIdx,  setMotiveIdx]  = useState(() => Math.floor(Math.random() * MOTIVATIONS.length))
@@ -126,7 +126,7 @@ export default function Dashboard() {
       setHabitLogs(hl.data ?? [])
       setGoals(g.data ?? [])
       setNotes(n.data ?? [])
-      setPomSessions(p.data?.length ?? 0)
+      setPomSessionsToday(p.data?.length ?? 0)
       if (lb.error) { console.error('Leaderboard RPC error:', lb.error); setLbError(true) }
       else setLeaderboard((lb.data as LeaderboardEntry[]) ?? [])
       setLoading(false)
@@ -142,7 +142,7 @@ export default function Dashboard() {
       setTick(n => n + 1)
       if (t <= 0) {
         if (pomMode === 'work') {
-          setPomSessions(s => s + 1)
+          incrementPomSessions()
           supabase.from('pomodoro_sessions').insert({ user_id: user?.id, session_type: 'work', duration_minutes: pomCustomMins[pomMode] })
             .then(() => supabase.rpc('get_leaderboard').then(({ data, error }) => {
               if (!error) setLeaderboard((data as LeaderboardEntry[]) ?? [])
@@ -429,7 +429,7 @@ export default function Dashboard() {
         <div className="t-card rounded-2xl border p-4 flex-1 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold t-ct-3 uppercase tracking-widest">Pomodoro</span>
-            <span className="text-xs t-ct-3">{pomSessions} sessions today</span>
+            <span className="text-xs t-ct-3">{pomSessionsToday} sessions today</span>
           </div>
 
           <div className="flex items-center gap-4 flex-1">
@@ -464,7 +464,7 @@ export default function Dashboard() {
                 </text>
                 {Array.from({ length: 4 }, (_, i) => (
                   <circle key={i} cx={68 + i * 9} cy={108} r="3"
-                    fill={i < pomSessions % 4 ? 'rgba(134,239,172,0.9)' : 'rgba(255,255,255,0.1)'} />
+                    fill={i < pomSessionsToday % 4 ? 'rgba(134,239,172,0.9)' : 'rgba(255,255,255,0.1)'} />
                 ))}
               </svg>
             </div>

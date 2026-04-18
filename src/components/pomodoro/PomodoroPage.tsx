@@ -13,7 +13,7 @@ type Mode = 'work' | 'short_break' | 'long_break'
 const MODE_LABELS: Record<Mode, string> = { work: 'Focus', short_break: 'Short Break', long_break: 'Long Break' }
 
 export default function PomodoroPage() {
-  const { user, pomCustomMins, setPomCustomMins } = useStore()
+  const { user, pomCustomMins, setPomCustomMins, incrementPomSessions } = useStore()
   const [mode, setMode] = useState<Mode>('work')
   const durations = { ...DEFAULT_POM_MINS, ...pomCustomMins }
   const [timeLeft, setTimeLeft] = useState(() => ({ ...DEFAULT_POM_MINS, ...pomCustomMins }).work * 60)
@@ -53,7 +53,7 @@ export default function PomodoroPage() {
           setTimeLeft(0)
           setRunning(false)
           playPomSound(modeRef.current)
-          if (modeRef.current === 'work') fireAchievement('pomodoro')
+          if (modeRef.current === 'work') { fireAchievement('pomodoro'); incrementPomSessions() }
           handleSessionComplete()
         } else {
           timeLeftRef.current = next
