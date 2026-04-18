@@ -474,7 +474,7 @@ export default function Dashboard() {
       {/* ── LEADERBOARD ──────────────────────────────────────── */}
       <div className="col-span-12 t-card rounded-2xl border p-4 flex flex-col gap-3">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-xs font-bold t-ct-3 uppercase tracking-widest flex-shrink-0">Leaderboard</span>
+          <span className="text-xs font-bold t-ct-3 uppercase tracking-widest flex-shrink-0">Today's Leaderboard</span>
           <span className="text-xs t-ct-3 text-right leading-4">
             <span className="hidden sm:inline">Top {leaderboard.length} · 1pt/focus min · 2pt/task&habit · 5pt/quiz&flashcard</span>
             <span className="sm:hidden">1pt focus · 2pt task/habit · 5pt quiz/card</span>
@@ -487,7 +487,7 @@ export default function Dashboard() {
             <p className="text-xs t-ct-3">Run <span className="font-mono bg-black/20 px-1 rounded">supabase/leaderboard.sql</span> in your Supabase SQL Editor.</p>
           </div>
         ) : leaderboard.length === 0 ? (
-          <p className="text-sm t-ct-3 text-center py-4">No activity yet — complete tasks, habits or a pomodoro session!</p>
+          <p className="text-sm t-ct-3 text-center py-4">No activity today yet — complete a task, habit or pomodoro to appear!</p>
         ) : (() => {
           const myIdx = leaderboard.findIndex(e => e.user_id === user?.id)
           const visibleEntries = lbExpanded

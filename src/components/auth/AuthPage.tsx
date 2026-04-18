@@ -115,10 +115,49 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen t-bg flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo text */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-black text-white tracking-tight">floow</h1>
-          <p className="t-text-dim text-sm mt-1">Focus. Level up. Optimize. Overcome. Win.</p>
+        {/* Logo */}
+        <div className="flex flex-col items-center mb-8">
+          <svg viewBox="89 27 360 184" className="h-16 w-auto mb-2" style={{ borderRadius: 10 }}>
+            <defs>
+              <radialGradient id="abgSphere" cx="28%" cy="25%" r="72%">
+                <stop offset="0%" style={{ stopColor: 'var(--theme-bg)' }} stopOpacity={0.55} />
+                <stop offset="58%" style={{ stopColor: 'var(--theme-bg)' }} stopOpacity={0.1} />
+                <stop offset="100%" stopColor="#010101" stopOpacity={1} />
+              </radialGradient>
+              <radialGradient id="amg" cx="28%" cy="25%" r="72%">
+                <stop offset="0%" stopColor="#ffffff" stopOpacity={0.92} />
+                <stop offset="42%" style={{ stopColor: 'var(--theme-bg)' }} stopOpacity={1} />
+                <stop offset="100%" stopColor="#010101" stopOpacity={1} />
+              </radialGradient>
+              <radialGradient id="amk" cx="28%" cy="25%" r="72%">
+                <stop offset="0%" stopColor="#ffffff" stopOpacity={1} />
+                <stop offset="100%" style={{ stopColor: 'var(--theme-bg)' }} stopOpacity={1} />
+              </radialGradient>
+            </defs>
+            <rect x="89" y="27" width="360" height="184" rx="10" fill="url(#abgSphere)" />
+            {[[108,60],[124,48],[138,54],[108,78],[108,96],[108,114],[126,114],[142,114],[108,132],[108,150],[108,168]].map(([cx,cy]) => (
+              <circle key={`af${cx}${cy}`} cx={cx} cy={cy} r="7" fill="url(#amg)" />
+            ))}
+            {[[174,42],[174,60],[174,78],[174,96],[174,114],[174,132],[174,150],[174,168]].map(([cx,cy]) => (
+              <circle key={`al${cx}${cy}`} cx={cx} cy={cy} r="7" fill="url(#amg)" />
+            ))}
+            {[[204,96],[222,96],[240,96],[258,96],[204,114],[258,114],[204,132],[258,132],[204,150],[258,150],[204,168],[222,168],[240,168],[258,168]].map(([cx,cy]) => (
+              <circle key={`ao1${cx}${cy}`} cx={cx} cy={cy} r="7" fill="url(#amg)" />
+            ))}
+            <circle cx={231} cy={132} r="9" fill="url(#amk)" />
+            {[[282,96],[300,96],[318,96],[336,96],[282,114],[336,114],[282,132],[336,132],[282,150],[336,150],[282,168],[300,168],[318,168],[336,168]].map(([cx,cy]) => (
+              <circle key={`ao2${cx}${cy}`} cx={cx} cy={cy} r="7" fill="url(#amg)" />
+            ))}
+            <circle cx={309} cy={132} r="9" fill="url(#amk)" />
+            {[[362,96],[434,96],[362,114],[398,114],[434,114],[362,132],[398,132],[434,132],[362,150],[380,150],[398,150],[416,150],[434,150],[362,168],[380,168],[416,168],[434,168]].map(([cx,cy]) => (
+              <circle key={`aw${cx}${cy}`} cx={cx} cy={cy} r="7" fill="url(#amg)" />
+            ))}
+            {[258,270,282].map((cx, i) => (
+              <circle key={`alip${i}`} cx={cx} cy={196} r="5" fill="url(#amk)"
+                style={{ animation: `lipPulse 1.4s ease-in-out ${i * 0.22}s infinite`, transformBox: 'fill-box', transformOrigin: 'center' }} />
+            ))}
+          </svg>
+          <p className="t-text-dim text-sm">Focus. Level up. Optimize. Overcome. Win.</p>
         </div>
 
         {/* Card */}

@@ -1,6 +1,7 @@
 -- Run this in Supabase SQL Editor (re-run to update)
--- Points: 1pt per focus minute, 2pts per completed task, 2pts per habit log,
---         5pts per quiz attempt, 5pts per flashcard session completed
+-- Points reset daily — only counts TODAY's activity
+-- 1pt per focus minute, 2pts per task done, 2pts per habit log,
+-- 5pts per quiz attempt, 5pts per flashcard session completed
 
 CREATE OR REPLACE FUNCTION public.get_leaderboard()
 RETURNS TABLE(
@@ -30,29 +31,46 @@ AS $$
     SELECT user_id, SUM(duration_minutes) AS total_mins
     FROM public.pomodoro_sessions
     WHERE session_type = 'work'
+      AND completed_at >= CURRENT_DATE
+      AND completed_at <  CURRENT_DATE + INTERVAL '1 day'
     GROUP BY user_id
   ) pom ON pom.user_id = p.id
   LEFT JOIN (
     SELECT user_id, COUNT(*) AS cnt
     FROM public.habit_logs
+    WHERE created_at >= CURRENT_DATE
+      AND created_at <  CURRENT_DATE + INTERVAL '1 day'
     GROUP BY user_id
   ) hab ON hab.user_id = p.id
   LEFT JOIN (
     SELECT user_id, COUNT(*) AS cnt
     FROM public.tasks
     WHERE status = 'done'
+      AND updated_at >= CURRENT_DATE
+      AND updated_at <  CURRENT_DATE + INTERVAL '1 day'
     GROUP BY user_id
   ) tsk ON tsk.user_id = p.id
   LEFT JOIN (
     SELECT user_id, COUNT(*) AS cnt
     FROM public.quiz_attempts
+    WHERE created_at >= CURRENT_DATE
+      AND created_at <  CURRENT_DATE + INTERVAL '1 day'
     GROUP BY user_id
   ) qz ON qz.user_id = p.id
   LEFT JOIN (
     SELECT user_id, COUNT(*) AS cnt
     FROM public.flashcard_sessions
+    WHERE created_at >= CURRENT_DATE
+      AND created_at <  CURRENT_DATE + INTERVAL '1 day'
     GROUP BY user_id
   ) fc ON fc.user_id = p.id
+  WHERE (
+    COALESCE(pom.total_mins, 0) +
+    COALESCE(hab.cnt, 0) * 2    +
+    COALESCE(tsk.cnt, 0) * 2    +
+    COALESCE(qz.cnt,  0) * 5    +
+    COALESCE(fc.cnt,  0) * 5
+  ) > 0
   ORDER BY total_points DESC
   LIMIT 31;
 $$;
