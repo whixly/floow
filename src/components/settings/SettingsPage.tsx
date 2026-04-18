@@ -66,7 +66,7 @@ export default function SettingsPage() {
       }
     }
     storeSetProfileUsername(newUsername)
-    await loadProfile(user.id)
+    if (user) await loadProfile(user.id)
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
