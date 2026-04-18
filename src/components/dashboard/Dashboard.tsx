@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import {
   startOfMonth, endOfMonth, startOfWeek, endOfWeek,
   eachDayOfInterval, isSameDay, isSameMonth, format,
-  addMonths, subMonths, subDays
+  addMonths, subMonths, subDays, parseISO
 } from 'date-fns'
 import { ChevronLeft, ChevronRight, Play, Pause, Square, Coffee, X, RefreshCw } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
@@ -84,7 +84,8 @@ export default function Dashboard() {
   const [showMotive, setShowMotive] = useState(true)
 
   // Calendar
-  const [calMonth, setCalMonth] = useState(new Date())
+  const [calMonth,  setCalMonth]  = useState(new Date())
+  const [calTasks,  setCalTasks]  = useState<Task[]>([])
 
   // Tick counter — forces re-render while timer is running
   const [, setTick] = useState(0)
@@ -152,9 +153,20 @@ export default function Dashboard() {
     return () => clearInterval(id)
   }, [pomRunning, pomMode])
 
+  // ── Load tasks with due dates for current calendar month ─────
+  useEffect(() => {
+    if (!user) return
+    const start = format(startOfMonth(calMonth), 'yyyy-MM-dd')
+    const end   = format(endOfMonth(calMonth),   'yyyy-MM-dd')
+    supabase.from('tasks').select('*').eq('user_id', user.id)
+      .not('due_date', 'is', null).gte('due_date', start).lte('due_date', end)
+      .then(({ data }) => setCalTasks(data ?? []))
+  }, [user, calMonth])
+
   // ── Helpers ───────────────────────────────────────────────
-  const eventsOnDay = (day: Date) => events.filter(e => isSameDay(new Date(e.start_time), day))
-  const isHabitDone = (hid: string, d: string) => habitLogs.some(l => l.habit_id === hid && l.completed_date === d)
+  const eventsOnDay  = (day: Date) => events.filter(e => isSameDay(new Date(e.start_time), day))
+  const tasksOnDay   = (day: Date) => calTasks.filter(t => t.due_date && isSameDay(parseISO(t.due_date), day))
+  const isHabitDone  = (hid: string, d: string) => habitLogs.some(l => l.habit_id === hid && l.completed_date === d)
 
   const priorityDot: Record<string, string> = {
     urgent: 'bg-red-400', high: 'bg-orange-400', medium: 'bg-yellow-400', low: 'bg-green-400',
@@ -270,15 +282,17 @@ export default function Dashboard() {
           {calDays.map(day => {
             const isToday = isSameDay(day, today)
             const inMonth = isSameMonth(day, calMonth)
-            const dots    = eventsOnDay(day)
+            const dayEvents = eventsOnDay(day)
+            const dayTasks  = tasksOnDay(day)
             return (
               <div key={day.toISOString()} className="flex flex-col items-center gap-0.5 cursor-pointer group" onClick={() => navigate('/app/schedule')}>
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition
                   ${isToday ? 'bg-white/90 text-[var(--theme-bg)] font-black' : inMonth ? 't-ct group-hover:bg-white/10' : 't-ct-3 opacity-30'}`}>
                   {format(day, 'd')}
                 </div>
-                <div className="flex gap-0.5 h-1.5 justify-center">
-                  {dots.slice(0,3).map((_,i) => <span key={i} className="w-1 h-1 rounded-full bg-white/60" />)}
+                <div className="flex gap-0.5 h-1.5 justify-center flex-wrap">
+                  {dayEvents.slice(0,2).map((_,i) => <span key={`e${i}`} className="w-1 h-1 rounded-full bg-white/60" />)}
+                  {dayTasks.slice(0,2).map(t => <span key={t.id} className={`w-1 h-1 rounded-full ${priorityDot[t.priority]}`} />)}
                 </div>
               </div>
             )
@@ -287,15 +301,24 @@ export default function Dashboard() {
 
         <div className="border-t border-white/10 pt-3 space-y-1.5">
           <span className="text-xs font-bold t-ct-3 uppercase tracking-widest">Today</span>
-          {eventsOnDay(today).length === 0
-            ? <p className="text-xs t-ct-3">No events today</p>
-            : eventsOnDay(today).slice(0,3).map(ev => (
-                <div key={ev.id} className="flex items-center gap-2 text-xs">
-                  <span className="w-1 h-3 rounded-full bg-white/50 flex-shrink-0" />
-                  <span className="t-ct truncate flex-1">{ev.title}</span>
-                  <span className="t-ct-3 flex-shrink-0">{format(new Date(ev.start_time),'h:mm a')}</span>
-                </div>
-              ))
+          {eventsOnDay(today).length === 0 && tasksOnDay(today).length === 0
+            ? <p className="text-xs t-ct-3">No events or tasks today</p>
+            : <>
+                {eventsOnDay(today).slice(0,2).map(ev => (
+                  <div key={ev.id} className="flex items-center gap-2 text-xs">
+                    <span className="w-1 h-3 rounded-full bg-white/50 flex-shrink-0" />
+                    <span className="t-ct truncate flex-1">{ev.title}</span>
+                    <span className="t-ct-3 flex-shrink-0">{format(new Date(ev.start_time),'h:mm a')}</span>
+                  </div>
+                ))}
+                {tasksOnDay(today).slice(0,2).map(t => (
+                  <div key={t.id} className="flex items-center gap-2 text-xs">
+                    <span className={`w-1 h-3 rounded-full flex-shrink-0 ${priorityDot[t.priority]}`} />
+                    <span className={`truncate flex-1 ${t.status === 'done' ? 't-ct-3 line-through' : 't-ct'}`}>{t.title}</span>
+                    <span className="t-ct-3 flex-shrink-0 capitalize">{t.priority}</span>
+                  </div>
+                ))}
+              </>
           }
         </div>
       </div>
