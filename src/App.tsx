@@ -28,7 +28,7 @@ async function uploadPendingAvatar(uid: string, storeSetAvatarUrl: (url: string 
     if (!error) {
       const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path)
       const url = pub.publicUrl + `?t=${Date.now()}`
-      await supabase.from('profiles').upsert({ id: uid, avatar_url: pub.publicUrl })
+      await supabase.from('profiles').upsert({ id: uid, avatar_url: url })
       storeSetAvatarUrl(url)
     }
   } catch {}

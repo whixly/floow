@@ -32,12 +32,11 @@ export default function SettingsPage() {
     const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
     if (!error) {
       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
-      await supabase.from('profiles').upsert({ id: user.id, avatar_url: publicUrl })
       const urlWithBust = publicUrl + `?t=${Date.now()}`
+      // Save bust URL to DB so leaderboard, TopNav, and Settings all read the same fresh URL
+      await supabase.from('profiles').upsert({ id: user.id, avatar_url: urlWithBust })
       setAvatarUrl(urlWithBust)
       storeSetAvatarUrl(urlWithBust)
-      // Re-sync store from DB so TopNav and leaderboard all show the same photo
-      await loadProfile(user.id)
     }
     setUploadingAvatar(false)
     // reset so same file can be re-uploaded
