@@ -13,7 +13,7 @@ const BREAK_SONGS = [
   '/sounds/break/avengers.mp3',
 ]
 
-// Shuffle queues — refilled once all songs have played (no repeats until exhausted)
+// Shuffle queues — refilled once all songs have played
 let focusQueue: string[] = []
 let breakQueue: string[] = []
 
@@ -36,30 +36,39 @@ function pickNext(isWork: boolean): string {
   }
 }
 
-// One persistent element — iOS keeps it unlocked as long as we reuse the same instance.
-let audioEl: HTMLAudioElement | null = null
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
 
-// Call on the play button tap (user gesture).
+// iOS: must reuse the single element that was unlocked during the user gesture.
+// Android/Desktop: creating a new Audio() after any user interaction works fine —
+// calling load() on a reused element breaks playback on Android Chrome.
+let iosAudioEl: HTMLAudioElement | null = null
+let currentEl: HTMLAudioElement | null = null
+
 export function unlockAudio() {
-  if (audioEl) return
-  audioEl = new Audio(FOCUS_SONGS[0])
-  audioEl.volume = 0
-  audioEl.play()
-    .then(() => { audioEl!.pause(); audioEl!.currentTime = 0; audioEl!.volume = 1 })
-    .catch(() => { if (audioEl) audioEl.volume = 1 })
+  if (!isIOS) return
+  if (iosAudioEl) return
+  iosAudioEl = new Audio(FOCUS_SONGS[0])
+  iosAudioEl.volume = 0
+  iosAudioEl.play()
+    .then(() => { iosAudioEl!.pause(); iosAudioEl!.currentTime = 0; iosAudioEl!.volume = 1 })
+    .catch(() => { if (iosAudioEl) iosAudioEl.volume = 1 })
 }
 
 export function playPomSound(completedMode: 'work' | 'short_break' | 'long_break') {
   const pick = pickNext(completedMode === 'work')
 
-  if (audioEl) {
-    audioEl.pause()
-    audioEl.src = pick
-    audioEl.load()
-    audioEl.volume = 1
-    audioEl.play().catch((err) => console.warn('[pomSound] playback failed:', err))
+  if (isIOS && iosAudioEl) {
+    // iOS: swap src on the already-unlocked element
+    iosAudioEl.pause()
+    iosAudioEl.src = pick
+    iosAudioEl.load()
+    iosAudioEl.volume = 1
+    iosAudioEl.play().catch(err => console.warn('[pomSound] iOS playback failed:', err))
   } else {
-    audioEl = new Audio(pick)
-    audioEl.play().catch((err) => console.warn('[pomSound] playback failed:', err))
+    // Android + Desktop: fresh element per play — no load() issues
+    if (currentEl) { currentEl.pause(); currentEl.currentTime = 0 }
+    currentEl = new Audio(pick)
+    currentEl.volume = 1
+    currentEl.play().catch(err => console.warn('[pomSound] playback failed:', err))
   }
 }
