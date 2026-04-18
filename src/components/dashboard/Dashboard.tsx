@@ -143,7 +143,7 @@ export default function Dashboard() {
       if (t <= 0) {
         if (pomMode === 'work') {
           setPomSessions(s => s + 1)
-          supabase.from('pomodoro_sessions').insert({ user_id: user?.id, session_type: 'work' })
+          supabase.from('pomodoro_sessions').insert({ user_id: user?.id, session_type: 'work', duration_minutes: pomCustomMins[pomMode] })
           fireAchievement('pomodoro')
         }
         playPomSound(pomMode)
