@@ -13,8 +13,30 @@ const BREAK_SONGS = [
   '/sounds/break/avengers.mp3',
 ]
 
+// Shuffle queues — refilled once all songs have played (no repeats until exhausted)
+let focusQueue: string[] = []
+let breakQueue: string[] = []
+
+function shuffle(arr: string[]): string[] {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
+function pickNext(isWork: boolean): string {
+  if (isWork) {
+    if (focusQueue.length === 0) focusQueue = shuffle(FOCUS_SONGS)
+    return focusQueue.pop()!
+  } else {
+    if (breakQueue.length === 0) breakQueue = shuffle(BREAK_SONGS)
+    return breakQueue.pop()!
+  }
+}
+
 // One persistent element — iOS keeps it unlocked as long as we reuse the same instance.
-// Swapping .src on an already-unlocked element works fine on iOS Safari.
 let audioEl: HTMLAudioElement | null = null
 
 // Call on the play button tap (user gesture).
@@ -28,18 +50,15 @@ export function unlockAudio() {
 }
 
 export function playPomSound(completedMode: 'work' | 'short_break' | 'long_break') {
-  const songs = completedMode === 'work' ? FOCUS_SONGS : BREAK_SONGS
-  const pick = songs[Math.floor(Math.random() * songs.length)]
+  const pick = pickNext(completedMode === 'work')
 
   if (audioEl) {
-    // Reuse the unlocked element — swap source then load() so browser fetches the new file
     audioEl.pause()
     audioEl.src = pick
     audioEl.load()
     audioEl.volume = 1
     audioEl.play().catch((err) => console.warn('[pomSound] playback failed:', err))
   } else {
-    // Desktop fallback (no gesture needed)
     audioEl = new Audio(pick)
     audioEl.play().catch((err) => console.warn('[pomSound] playback failed:', err))
   }
