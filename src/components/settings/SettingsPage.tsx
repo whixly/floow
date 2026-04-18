@@ -6,19 +6,22 @@ import { ACCENT_COLORS } from '../../types'
 
 export default function SettingsPage() {
   const { user, accentColor, setAccentColor, setAvatarUrl: storeSetAvatarUrl, setProfileUsername: storeSetProfileUsername } = useStore()
-  const [fullName,       setFullName]       = useState(user?.user_metadata?.full_name ?? '')
-  const [saving,         setSaving]         = useState(false)
-  const [saved,          setSaved]          = useState(false)
-  const [avatarUrl,      setAvatarUrl]      = useState<string | null>(null)
+  const [username,        setUsername]       = useState('')
+  const [fullName,        setFullName]       = useState(user?.user_metadata?.full_name ?? '')
+  const [saving,          setSaving]         = useState(false)
+  const [saved,           setSaved]          = useState(false)
+  const [saveError,       setSaveError]      = useState('')
+  const [avatarUrl,       setAvatarUrl]      = useState<string | null>(null)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!user) return
-    supabase.from('profiles').select('avatar_url, full_name').eq('id', user.id).single()
+    supabase.from('profiles').select('avatar_url, full_name, username').eq('id', user.id).single()
       .then(({ data }) => {
         if (data?.avatar_url) setAvatarUrl(data.avatar_url)
         if (data?.full_name)  setFullName(data.full_name)
+        if (data?.username)   setUsername(data.username)
       })
   }, [user])
 
@@ -43,12 +46,24 @@ export default function SettingsPage() {
 
   const handleSaveName = async (e: React.FormEvent) => {
     e.preventDefault()
-    setSaving(true)
+    setSaving(true); setSaveError('')
+    const newUsername = username.trim().toLowerCase()
+
+    // Check username uniqueness (skip if unchanged)
+    const { data: existing } = await supabase
+      .from('profiles').select('id').eq('username', newUsername).neq('id', user!.id).maybeSingle()
+    if (existing) {
+      setSaveError('Username is already taken.')
+      setSaving(false); return
+    }
+
     await supabase.auth.updateUser({ data: { full_name: fullName } })
     if (user) {
-      await supabase.from('profiles').upsert({ id: user.id, full_name: fullName, accent_color: accentColor })
+      await supabase.from('profiles').upsert({
+        id: user.id, full_name: fullName, username: newUsername, accent_color: accentColor,
+      })
     }
-    storeSetProfileUsername(fullName)
+    storeSetProfileUsername(newUsername)
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
@@ -117,6 +132,17 @@ export default function SettingsPage() {
 
           <form onSubmit={handleSaveName} className="space-y-4">
             <div>
+              <label className="text-sm font-medium t-ct-2 block mb-1">Username</label>
+              <input
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                placeholder="your_username"
+                required
+                className={inputCls}
+              />
+              <p className="text-xs t-ct-3 mt-1">This is what shows in the leaderboard and top bar.</p>
+            </div>
+            <div>
               <label className="text-sm font-medium t-ct-2 block mb-1">Full Name</label>
               <input
                 value={fullName}
@@ -133,6 +159,7 @@ export default function SettingsPage() {
                 className={`${inputCls} opacity-50 cursor-not-allowed`}
               />
             </div>
+            {saveError && <p className="text-sm text-red-500 bg-red-500/10 px-3 py-2 rounded-lg">{saveError}</p>}
             <button
               type="submit"
               disabled={saving}
