@@ -144,6 +144,9 @@ export default function Dashboard() {
         if (pomMode === 'work') {
           setPomSessions(s => s + 1)
           supabase.from('pomodoro_sessions').insert({ user_id: user?.id, session_type: 'work', duration_minutes: pomCustomMins[pomMode] })
+            .then(() => supabase.rpc('get_leaderboard').then(({ data, error }) => {
+              if (!error) setLeaderboard((data as LeaderboardEntry[]) ?? [])
+            }))
           fireAchievement('pomodoro')
         }
         playPomSound(pomMode)
@@ -497,7 +500,19 @@ export default function Dashboard() {
       {/* ── LEADERBOARD ──────────────────────────────────────── */}
       <div className="col-span-12 t-card rounded-2xl border p-4 flex flex-col gap-3">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-xs font-bold t-ct-3 uppercase tracking-widest flex-shrink-0">Today's Leaderboard</span>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <span className="text-xs font-bold t-ct-3 uppercase tracking-widest">Today's Leaderboard</span>
+            <button
+              onClick={() => supabase.rpc('get_leaderboard').then(({ data, error }) => {
+                if (!error) setLeaderboard((data as LeaderboardEntry[]) ?? [])
+                else setLbError(true)
+              })}
+              className="t-ct-3 hover:text-white transition"
+              title="Refresh leaderboard"
+            >
+              <RefreshCw size={12} />
+            </button>
+          </div>
           <span className="text-xs t-ct-3 text-right leading-4">
             <span className="hidden sm:inline">Top {leaderboard.length} · 1pt/focus min · 2pt/task&habit · 5pt/quiz&flashcard</span>
             <span className="sm:hidden">1pt focus · 2pt task/habit · 5pt quiz/card</span>
