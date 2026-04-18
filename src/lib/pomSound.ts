@@ -32,10 +32,10 @@ export function playPomSound(completedMode: 'work' | 'short_break' | 'long_break
   const pick = songs[Math.floor(Math.random() * songs.length)]
 
   if (audioEl) {
-    // Reuse the unlocked element — just swap the source
+    // Reuse the unlocked element — swap source then load() so browser fetches the new file
     audioEl.pause()
     audioEl.src = pick
-    audioEl.currentTime = 0
+    audioEl.load()
     audioEl.volume = 1
     audioEl.play().catch((err) => console.warn('[pomSound] playback failed:', err))
   } else {
