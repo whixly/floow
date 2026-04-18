@@ -109,7 +109,7 @@ export const useStore = create<AppStore>()(
           .single()
         if (data) {
           set({
-            avatarUrl: data.avatar_url ?? null,
+            avatarUrl: data.avatar_url ? data.avatar_url + `?t=${Date.now()}` : null,
             profileUsername: data.username ?? null,
           })
         }
