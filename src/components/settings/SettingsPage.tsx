@@ -16,7 +16,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!user) return
-    supabase.from('profiles').select('avatar_url, full_name, username').eq('id', user.id).single()
+    supabase.from('profiles').select('avatar_url, username').eq('id', user.id).single()
       .then(({ data }) => {
         if (data?.avatar_url) setAvatarUrl(data.avatar_url)
         if (data?.username)   setUsername(data.username)
@@ -56,9 +56,13 @@ export default function SettingsPage() {
     }
 
     if (user) {
-      await supabase.from('profiles').upsert({
+      const { error: upsertErr } = await supabase.from('profiles').upsert({
         id: user.id, username: newUsername, accent_color: accentColor,
       })
+      if (upsertErr) {
+        setSaveError(upsertErr.message)
+        setSaving(false); return
+      }
     }
     storeSetProfileUsername(newUsername)
     setSaving(false); setSaved(true)
