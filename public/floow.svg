@@ -1,90 +1,33 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="89 27 360 184">
-  <defs>
-    <radialGradient id="bg" cx="28%" cy="25%" r="72%">
-      <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.6"/>
-      <stop offset="58%" stop-color="#3B82F6" stop-opacity="0.1"/>
-      <stop offset="100%" stop-color="#010101" stop-opacity="1"/>
-    </radialGradient>
-    <radialGradient id="dot" cx="28%" cy="25%" r="72%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
-      <stop offset="42%" stop-color="#3B82F6" stop-opacity="1"/>
-      <stop offset="100%" stop-color="#010101" stop-opacity="1"/>
-    </radialGradient>
-    <radialGradient id="eye" cx="28%" cy="25%" r="72%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
-      <stop offset="100%" stop-color="#3B82F6" stop-opacity="1"/>
-    </radialGradient>
-  </defs>
-  <rect x="89" y="27" width="360" height="184" rx="10" fill="url(#bg)"/>
-  <!-- f -->
-  <circle cx="108" cy="60" r="7" fill="url(#dot)"/>
-  <circle cx="124" cy="48" r="7" fill="url(#dot)"/>
-  <circle cx="138" cy="54" r="7" fill="url(#dot)"/>
-  <circle cx="108" cy="78" r="7" fill="url(#dot)"/>
-  <circle cx="108" cy="96" r="7" fill="url(#dot)"/>
-  <circle cx="108" cy="114" r="7" fill="url(#dot)"/>
-  <circle cx="126" cy="114" r="7" fill="url(#dot)"/>
-  <circle cx="142" cy="114" r="7" fill="url(#dot)"/>
-  <circle cx="108" cy="132" r="7" fill="url(#dot)"/>
-  <circle cx="108" cy="150" r="7" fill="url(#dot)"/>
-  <circle cx="108" cy="168" r="7" fill="url(#dot)"/>
-  <!-- l -->
-  <circle cx="174" cy="42" r="7" fill="url(#dot)"/>
-  <circle cx="174" cy="60" r="7" fill="url(#dot)"/>
-  <circle cx="174" cy="78" r="7" fill="url(#dot)"/>
-  <circle cx="174" cy="96" r="7" fill="url(#dot)"/>
-  <circle cx="174" cy="114" r="7" fill="url(#dot)"/>
-  <circle cx="174" cy="132" r="7" fill="url(#dot)"/>
-  <circle cx="174" cy="150" r="7" fill="url(#dot)"/>
-  <circle cx="174" cy="168" r="7" fill="url(#dot)"/>
-  <!-- o1 -->
-  <circle cx="204" cy="96" r="7" fill="url(#dot)"/>
-  <circle cx="222" cy="96" r="7" fill="url(#dot)"/>
-  <circle cx="240" cy="96" r="7" fill="url(#dot)"/>
-  <circle cx="258" cy="96" r="7" fill="url(#dot)"/>
-  <circle cx="204" cy="114" r="7" fill="url(#dot)"/>
-  <circle cx="258" cy="114" r="7" fill="url(#dot)"/>
-  <circle cx="204" cy="132" r="7" fill="url(#dot)"/>
-  <circle cx="258" cy="132" r="7" fill="url(#dot)"/>
-  <circle cx="204" cy="150" r="7" fill="url(#dot)"/>
-  <circle cx="258" cy="150" r="7" fill="url(#dot)"/>
-  <circle cx="204" cy="168" r="7" fill="url(#dot)"/>
-  <circle cx="222" cy="168" r="7" fill="url(#dot)"/>
-  <circle cx="240" cy="168" r="7" fill="url(#dot)"/>
-  <circle cx="258" cy="168" r="7" fill="url(#dot)"/>
-  <circle cx="231" cy="132" r="9" fill="url(#eye)"/>
-  <!-- o2 -->
-  <circle cx="282" cy="96" r="7" fill="url(#dot)"/>
-  <circle cx="300" cy="96" r="7" fill="url(#dot)"/>
-  <circle cx="318" cy="96" r="7" fill="url(#dot)"/>
-  <circle cx="336" cy="96" r="7" fill="url(#dot)"/>
-  <circle cx="282" cy="114" r="7" fill="url(#dot)"/>
-  <circle cx="336" cy="114" r="7" fill="url(#dot)"/>
-  <circle cx="282" cy="132" r="7" fill="url(#dot)"/>
-  <circle cx="336" cy="132" r="7" fill="url(#dot)"/>
-  <circle cx="282" cy="150" r="7" fill="url(#dot)"/>
-  <circle cx="336" cy="150" r="7" fill="url(#dot)"/>
-  <circle cx="282" cy="168" r="7" fill="url(#dot)"/>
-  <circle cx="300" cy="168" r="7" fill="url(#dot)"/>
-  <circle cx="318" cy="168" r="7" fill="url(#dot)"/>
-  <circle cx="336" cy="168" r="7" fill="url(#dot)"/>
-  <circle cx="309" cy="132" r="9" fill="url(#eye)"/>
-  <!-- w -->
-  <circle cx="362" cy="96" r="7" fill="url(#dot)"/>
-  <circle cx="434" cy="96" r="7" fill="url(#dot)"/>
-  <circle cx="362" cy="114" r="7" fill="url(#dot)"/>
-  <circle cx="398" cy="114" r="7" fill="url(#dot)"/>
-  <circle cx="434" cy="114" r="7" fill="url(#dot)"/>
-  <circle cx="362" cy="132" r="7" fill="url(#dot)"/>
-  <circle cx="398" cy="132" r="7" fill="url(#dot)"/>
-  <circle cx="434" cy="132" r="7" fill="url(#dot)"/>
-  <circle cx="362" cy="150" r="7" fill="url(#dot)"/>
-  <circle cx="380" cy="150" r="7" fill="url(#dot)"/>
-  <circle cx="398" cy="150" r="7" fill="url(#dot)"/>
-  <circle cx="416" cy="150" r="7" fill="url(#dot)"/>
-  <circle cx="434" cy="150" r="7" fill="url(#dot)"/>
-  <circle cx="362" cy="168" r="7" fill="url(#dot)"/>
-  <circle cx="380" cy="168" r="7" fill="url(#dot)"/>
-  <circle cx="416" cy="168" r="7" fill="url(#dot)"/>
-  <circle cx="434" cy="168" r="7" fill="url(#dot)"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="12" fill="#1E3A8A"/>
+  <!-- left o ring -->
+  <circle cx="16" cy="24" r="2.5" fill="#93C5FD"/>
+  <circle cx="22" cy="20" r="2.5" fill="#93C5FD"/>
+  <circle cx="28" cy="20" r="2.5" fill="#93C5FD"/>
+  <circle cx="34" cy="24" r="2.5" fill="#93C5FD"/>
+  <circle cx="16" cy="30" r="2.5" fill="#93C5FD"/>
+  <circle cx="34" cy="30" r="2.5" fill="#93C5FD"/>
+  <circle cx="16" cy="36" r="2.5" fill="#93C5FD"/>
+  <circle cx="34" cy="36" r="2.5" fill="#93C5FD"/>
+  <circle cx="16" cy="42" r="2.5" fill="#93C5FD"/>
+  <circle cx="22" cy="46" r="2.5" fill="#93C5FD"/>
+  <circle cx="28" cy="46" r="2.5" fill="#93C5FD"/>
+  <circle cx="34" cy="42" r="2.5" fill="#93C5FD"/>
+  <!-- left eye -->
+  <circle cx="25" cy="33" r="4" fill="white"/>
+  <!-- right o ring -->
+  <circle cx="42" cy="24" r="2.5" fill="#93C5FD"/>
+  <circle cx="48" cy="20" r="2.5" fill="#93C5FD"/>
+  <circle cx="54" cy="20" r="2.5" fill="#93C5FD"/>
+  <circle cx="60" cy="24" r="2.5" fill="#93C5FD"/>
+  <circle cx="42" cy="30" r="2.5" fill="#93C5FD"/>
+  <circle cx="60" cy="30" r="2.5" fill="#93C5FD"/>
+  <circle cx="42" cy="36" r="2.5" fill="#93C5FD"/>
+  <circle cx="60" cy="36" r="2.5" fill="#93C5FD"/>
+  <circle cx="42" cy="42" r="2.5" fill="#93C5FD"/>
+  <circle cx="48" cy="46" r="2.5" fill="#93C5FD"/>
+  <circle cx="54" cy="46" r="2.5" fill="#93C5FD"/>
+  <circle cx="60" cy="42" r="2.5" fill="#93C5FD"/>
+  <!-- right eye -->
+  <circle cx="51" cy="33" r="4" fill="white"/>
 </svg>
