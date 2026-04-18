@@ -16,8 +16,27 @@ import SettingsPage from './components/settings/SettingsPage'
 import FlashcardsPage from './components/flashcards/FlashcardsPage'
 import QuizPage from './components/quiz/QuizPage'
 
+async function uploadPendingAvatar(uid: string, storeSetAvatarUrl: (url: string | null) => void) {
+  const raw = sessionStorage.getItem('pendingAvatar')
+  if (!raw) return
+  try {
+    const { uid: pendingUid, data, ext } = JSON.parse(raw)
+    if (pendingUid !== uid) return
+    const blob = await fetch(data).then(r => r.blob())
+    const path = `${uid}/avatar.${ext}`
+    const { error } = await supabase.storage.from('avatars').upload(path, blob, { upsert: true })
+    if (!error) {
+      const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path)
+      const url = pub.publicUrl + `?t=${Date.now()}`
+      await supabase.from('profiles').upsert({ id: uid, avatar_url: pub.publicUrl })
+      storeSetAvatarUrl(url)
+    }
+  } catch {}
+  sessionStorage.removeItem('pendingAvatar')
+}
+
 function App() {
-  const { setUser, applyTheme, loadProfile } = useStore()
+  const { setUser, applyTheme, loadProfile, setAvatarUrl: storeSetAvatarUrl } = useStore()
   const [loading, setLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
@@ -34,7 +53,10 @@ function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
       setIsAuthenticated(!!session)
-      if (session?.user) loadProfile(session.user.id)
+      if (session?.user) {
+        loadProfile(session.user.id)
+        uploadPendingAvatar(session.user.id, storeSetAvatarUrl)
+      }
     })
 
     return () => subscription.unsubscribe()

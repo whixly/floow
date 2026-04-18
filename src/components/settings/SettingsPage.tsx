@@ -7,7 +7,6 @@ import { ACCENT_COLORS } from '../../types'
 export default function SettingsPage() {
   const { user, accentColor, setAccentColor, setAvatarUrl: storeSetAvatarUrl, setProfileUsername: storeSetProfileUsername } = useStore()
   const [username,        setUsername]       = useState('')
-  const [fullName,        setFullName]       = useState(user?.user_metadata?.full_name ?? '')
   const [saving,          setSaving]         = useState(false)
   const [saved,           setSaved]          = useState(false)
   const [saveError,       setSaveError]      = useState('')
@@ -20,7 +19,6 @@ export default function SettingsPage() {
     supabase.from('profiles').select('avatar_url, full_name, username').eq('id', user.id).single()
       .then(({ data }) => {
         if (data?.avatar_url) setAvatarUrl(data.avatar_url)
-        if (data?.full_name)  setFullName(data.full_name)
         if (data?.username)   setUsername(data.username)
       })
   }, [user])
@@ -57,10 +55,9 @@ export default function SettingsPage() {
       setSaving(false); return
     }
 
-    await supabase.auth.updateUser({ data: { full_name: fullName } })
     if (user) {
       await supabase.from('profiles').upsert({
-        id: user.id, full_name: fullName, username: newUsername, accent_color: accentColor,
+        id: user.id, username: newUsername, accent_color: accentColor,
       })
     }
     storeSetProfileUsername(newUsername)
@@ -74,7 +71,7 @@ export default function SettingsPage() {
   }
 
   const inputCls = 'w-full px-4 py-2.5 rounded-lg border text-sm focus:outline-none transition t-input'
-  const initials = (fullName || user?.email || 'U')[0].toUpperCase()
+  const initials = (username || user?.email || 'U')[0].toUpperCase()
 
   return (
     <div className="fade-in space-y-6">
@@ -141,15 +138,6 @@ export default function SettingsPage() {
                 className={inputCls}
               />
               <p className="text-xs t-ct-3 mt-1">This is what shows in the leaderboard and top bar.</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium t-ct-2 block mb-1">Full Name</label>
-              <input
-                value={fullName}
-                onChange={e => setFullName(e.target.value)}
-                placeholder="Your name"
-                className={inputCls}
-              />
             </div>
             <div>
               <label className="text-sm font-medium t-ct-2 block mb-1">Email</label>

@@ -84,28 +84,28 @@ export default function AuthPage() {
     }
 
     const uid = authData.user.id
-    let avatarUrl = ''
 
-    // Upload avatar if provided
+    // Avatar can't be uploaded yet (no active session until email confirmed)
+    // Store it in sessionStorage — App.tsx uploads it on first sign-in
     if (suAvatar) {
-      const ext = suAvatar.name.split('.').pop()
-      const path = `${uid}/avatar.${ext}`
-      const { error: uploadErr } = await supabase.storage
-        .from('avatars')
-        .upload(path, suAvatar, { upsert: true })
-      if (!uploadErr) {
-        const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path)
-        avatarUrl = pub.publicUrl
+      const reader = new FileReader()
+      reader.onload = () => {
+        sessionStorage.setItem('pendingAvatar', JSON.stringify({
+          uid,
+          data: reader.result as string,
+          ext: suAvatar.name.split('.').pop() ?? 'jpg',
+        }))
       }
+      reader.readAsDataURL(suAvatar)
     }
 
-    // Update profile
+    // Save profile (avatar_url filled in after email confirmation + sign-in)
     await supabase.from('profiles').upsert({
       id: uid,
       email: suEmail.trim(),
       username,
       full_name: username,
-      avatar_url: avatarUrl || null,
+      avatar_url: null,
     })
 
     setMessage('Account created! Check your email to confirm before signing in.')
