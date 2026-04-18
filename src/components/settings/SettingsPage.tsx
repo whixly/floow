@@ -5,7 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { ACCENT_COLORS } from '../../types'
 
 export default function SettingsPage() {
-  const { user, accentColor, setAccentColor, setAvatarUrl: storeSetAvatarUrl, setProfileUsername: storeSetProfileUsername } = useStore()
+  const { user, accentColor, setAccentColor, setAvatarUrl: storeSetAvatarUrl, setProfileUsername: storeSetProfileUsername, loadProfile } = useStore()
   const [username,        setUsername]       = useState('')
   const [saving,          setSaving]         = useState(false)
   const [saved,           setSaved]          = useState(false)
@@ -36,6 +36,8 @@ export default function SettingsPage() {
       const urlWithBust = publicUrl + `?t=${Date.now()}`
       setAvatarUrl(urlWithBust)
       storeSetAvatarUrl(urlWithBust)
+      // Re-sync store from DB so TopNav and leaderboard all show the same photo
+      await loadProfile(user.id)
     }
     setUploadingAvatar(false)
     // reset so same file can be re-uploaded
@@ -65,6 +67,7 @@ export default function SettingsPage() {
       }
     }
     storeSetProfileUsername(newUsername)
+    await loadProfile(user.id)
     setSaving(false); setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
