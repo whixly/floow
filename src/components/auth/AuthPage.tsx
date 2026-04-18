@@ -108,7 +108,7 @@ export default function AuthPage() {
       avatar_url: null,
     })
 
-    setMessage('Account created! Check your email to confirm before signing in.')
+    setMessage('Account created! You can now sign in.')
     setLoading(false)
   }
 
@@ -259,9 +259,6 @@ export default function AuthPage() {
                 {loading ? 'Creating account…' : 'Create Account'}
               </button>
 
-              <p className="text-xs t-ct-3 text-center">
-                You'll receive a confirmation email. Please verify before signing in.
-              </p>
             </form>
           )}
         </div>
