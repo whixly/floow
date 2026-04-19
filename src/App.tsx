@@ -16,6 +16,29 @@ import SettingsPage from './components/settings/SettingsPage'
 import FlashcardsPage from './components/flashcards/FlashcardsPage'
 import QuizPage from './components/quiz/QuizPage'
 
+// If the user closed the tab while the timer was running, save however many
+// minutes they actually focused before leaving.
+async function saveInterruptedSession(uid: string) {
+  const store = useStore.getState()
+  if (!store.pomRunning || !store.pomStartedAt || store.pomMode !== 'work') return
+
+  const elapsedSecs = (Date.now() - store.pomStartedAt) / 1000
+  const maxSecs = store.pomRemainingAtStart
+  const focusedSecs = Math.min(elapsedSecs, maxSecs)
+  const focusedMins = Math.floor(focusedSecs / 60)
+
+  if (focusedMins >= 1) {
+    await supabase.from('pomodoro_sessions').insert({
+      user_id: uid,
+      duration_minutes: focusedMins,
+      session_type: 'work',
+    })
+    store.incrementPomSessions()
+  }
+
+  store.stopPom()
+}
+
 async function uploadPendingAvatar(uid: string, storeSetAvatarUrl: (url: string | null) => void) {
   const raw = sessionStorage.getItem('pendingAvatar')
   if (!raw) return
@@ -43,10 +66,13 @@ function App() {
   useEffect(() => {
     applyTheme()
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setUser(session?.user ?? null)
       setIsAuthenticated(!!session)
-      if (session?.user) loadProfile(session.user.id)
+      if (session?.user) {
+        await saveInterruptedSession(session.user.id)
+        loadProfile(session.user.id)
+      }
       setLoading(false)
     })
 
